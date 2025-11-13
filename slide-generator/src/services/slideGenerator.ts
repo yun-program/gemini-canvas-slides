@@ -29,11 +29,10 @@ ${request.content}
 - JSONのみを出力し、他の説明は含めない`;
 
   const message = await anthropic.messages.create({
-    // Available models (2025):
-    // - 'claude-3-7-sonnet-20250219' (recommended, latest Claude 3.7)
-    // - 'claude-3-5-haiku-20241022' (fast, cost-effective)
-    // - 'claude-3-opus-20240229' (high performance, deprecated 2025-06-30)
-    model: 'claude-3-7-sonnet-20250219',
+    // Available Claude 4 models (2025):
+    // - 'claude-haiku-4-5' (recommended: fast, cost-effective at $1/M tokens)
+    // - 'claude-sonnet-4-5-20250929' (high performance, best for coding)
+    model: 'claude-haiku-4-5',
     max_tokens: 2048,
     messages: [
       {
