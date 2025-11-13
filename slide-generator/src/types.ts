@@ -7,5 +7,4 @@ export interface Slide {
 
 export interface GenerateSlideRequest {
   content: string;
-  apiKey: string;
 }
