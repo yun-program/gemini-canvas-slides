@@ -29,7 +29,11 @@ ${request.content}
 - JSONのみを出力し、他の説明は含めない`;
 
   const message = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20240620',
+    // Available models (2025):
+    // - 'claude-3-7-sonnet-20250219' (recommended, latest Claude 3.7)
+    // - 'claude-3-5-haiku-20241022' (fast, cost-effective)
+    // - 'claude-3-opus-20240229' (high performance, deprecated 2025-06-30)
+    model: 'claude-3-7-sonnet-20250219',
     max_tokens: 2048,
     messages: [
       {
