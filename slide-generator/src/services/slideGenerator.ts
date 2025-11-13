@@ -2,8 +2,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Slide, GenerateSlideRequest } from '../types';
 
 export async function generateSlide(request: GenerateSlideRequest): Promise<Slide> {
+  const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('VITE_CLAUDE_API_KEY is not set in .env file');
+  }
+
   const anthropic = new Anthropic({
-    apiKey: request.apiKey,
+    apiKey,
     dangerouslyAllowBrowser: true, // Note: In production, API calls should be made from a backend
   });
 

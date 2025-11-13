@@ -6,7 +6,6 @@ import type { Slide } from './types';
 
 function App() {
   const [content, setContent] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [slide, setSlide] = useState<Slide | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,16 +16,11 @@ function App() {
       return;
     }
 
-    if (!apiKey.trim()) {
-      setError('Claude API Keyを入力してください');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const generatedSlide = await generateSlide({ content, apiKey });
+      const generatedSlide = await generateSlide({ content });
       setSlide(generatedSlide);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'スライドの生成に失敗しました');
@@ -51,24 +45,6 @@ function App() {
         {/* Input Section */}
         <div className="max-w-4xl mx-auto mb-8">
           <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
-            {/* API Key Input */}
-            <div>
-              <label htmlFor="apiKey" className="block text-sm font-semibold text-gray-700 mb-2">
-                Claude API Key
-              </label>
-              <input
-                id="apiKey"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                API Keyは <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Anthropic Console</a> で取得できます
-              </p>
-            </div>
-
             {/* Content Input */}
             <div>
               <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-2">
