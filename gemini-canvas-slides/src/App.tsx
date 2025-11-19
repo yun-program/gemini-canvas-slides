@@ -34,6 +34,7 @@ function App() {
   const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplates[0].id);
   const [selectedStyleId, setSelectedStyleId] = useState(currentStyles[0].id);
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // モード変更時にテンプレートとスタイルをリセット
   const handleModeChange = (mode: AppMode) => {
@@ -45,7 +46,7 @@ function App() {
     setGeneratedPrompt(null);
   };
 
-  const handleSubmit = (userInput: UserInput) => {
+  const handleSubmit = async (userInput: UserInput) => {
     const template = currentTemplates.find(t => t.id === selectedTemplateId);
     const style = currentStyles.find(s => s.id === selectedStyleId);
 
@@ -53,6 +54,13 @@ function App() {
       console.error('テンプレートまたはスタイルが見つかりません');
       return;
     }
+
+    // ローディング開始
+    setIsGenerating(true);
+    setGeneratedPrompt(null);
+
+    // 少し遅延を入れてローディングを表示
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // モード情報をuserInputに追加
     const inputWithMode = {
@@ -69,6 +77,7 @@ function App() {
     });
 
     setGeneratedPrompt(result);
+    setIsGenerating(false);
 
     // 結果セクションまでスクロール
     setTimeout(() => {
@@ -174,13 +183,33 @@ function App() {
                 mode={appMode}
                 t3SubMode={t3SubMode}
                 templates={currentTemplates}
+                isGenerating={isGenerating}
               />
             </div>
           </div>
         </div>
 
+        {/* ローディング表示 */}
+        {isGenerating && (
+          <div id="result-section" className="mt-12">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    プロンプトを生成中...
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    情報量を分析し、スライド枚数に応じた最適なプロンプトを作成しています
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 結果セクション */}
-        {generatedPrompt && (
+        {generatedPrompt && !isGenerating && (
           <div id="result-section" className="mt-12">
             <PromptDisplay result={generatedPrompt} />
           </div>
