@@ -1,0 +1,78 @@
+{
+  "styles": [
+    {
+      "id": "corporate-standard",
+      "name": "企業研修スタンダード",
+      "description": "見本スライドに基づくカスタムスタイル",
+      "font": {
+        "family": "Noto Sans JP",
+        "fallback": "sans-serif"
+      },
+      "colors": {
+        "primary": "#2563EB",
+        "secondary": "#60A5FA",
+        "text": "#1F2937",
+        "textLight": "#6B7280",
+        "background": "#FFFFFF",
+        "accent": "#DBEAFE",
+        "pointRed": "#CC0000",
+        "sectionDividerGray": "#444746"
+      },
+      "sizes": {
+        "titleSlide": "43px",
+        "slideTitle": "43px",
+        "heading": "36px",
+        "body": "29px",
+        "bodySmall": "23px",
+        "citation": "14px"
+      },
+      "geminiConversion": {
+        "note": "Gemini Canvas → Googleスライドエクスポート用に調整済み",
+        "formula": "元のpt × 1.35（36pt以下）または 1.33（37pt以上） × 1.33（Gemini倍率）",
+        "originalSizes": {
+          "titleSlide": "24pt → 43px",
+          "slideTitle": "24pt → 43px",
+          "heading": "20pt → 36px",
+          "body": "16pt → 29px",
+          "bodySmall": "13pt → 23px",
+          "citation": "8pt → 14px"
+        }
+      }
+    }
+  ],
+  "layoutRules": {
+    "aspectRatio": "16:9",
+    "slideSize": {
+      "note": "Geminiスライドは標準Googleスライドの1.33倍（13.333インチ vs 10インチ）"
+    },
+    "margins": {
+      "top": "60px",
+      "bottom": "60px",
+      "left": "80px",
+      "right": "80px",
+      "note": "テキスト左上の開始位置を揃える。下に余白ができるのは可。"
+    },
+    "alignment": {
+      "default": "left",
+      "exceptions": ["表のタイトル", "元資料で中央揃えのもの"],
+      "note": "文字は左揃えで統一。表が連続するページは位置を揃える（スライド移動でズレないように）"
+    },
+    "bulletPoints": {
+      "min": 3,
+      "max": 6,
+      "characterLimit": 60
+    },
+    "textLimits": {
+      "slideTitle": 40,
+      "bodyPerSlide": 400
+    },
+    "colorUsage": {
+      "pointRed": "#CC0000",
+      "sectionDividerGray": "#444746",
+      "notes": {
+        "pointRed": "ポイントの赤色は #f00 ではなく、暗めの落ち着いた赤を使用",
+        "sectionDividerGray": "章タイトル（セクション区切り）の背景色。見本スライドに基づく"
+      }
+    }
+  }
+}

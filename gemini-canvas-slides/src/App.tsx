@@ -8,11 +8,21 @@ import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig } from './
 // 設定ファイルのインポート
 import templatesData from '../config/templates.json';
 import stylesData from '../config/styles.json';
+import templatesCorporateData from '../config/templates_corporate.json';
+import stylesCorporateData from '../config/styles_corporate.json';
 
 function App() {
-  const templates = (templatesData as TemplateConfig).templates;
-  const styles = (stylesData as StyleConfig).styles;
-  const layoutRules = (stylesData as StyleConfig).layoutRules;
+  // テンプレートとスタイルをマージ
+  const templates = [
+    ...(templatesData as TemplateConfig).templates,
+    ...(templatesCorporateData as TemplateConfig).templates,
+  ];
+  const styles = [
+    ...(stylesData as StyleConfig).styles,
+    ...(stylesCorporateData as StyleConfig).styles,
+  ];
+  // 企業研修用のレイアウトルールを優先
+  const layoutRules = (stylesCorporateData as StyleConfig).layoutRules || (stylesData as StyleConfig).layoutRules;
 
   const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0].id);
   const [selectedStyleId, setSelectedStyleId] = useState(styles[0].id);

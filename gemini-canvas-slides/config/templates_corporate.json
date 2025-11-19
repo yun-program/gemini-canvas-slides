@@ -1,0 +1,173 @@
+{
+  "templates": [
+    {
+      "id": "corporate-training-full",
+      "name": "企業研修フルセット（14パターン）",
+      "description": "全14種類のデザインパターンを含む包括的な研修スライド",
+      "defaultSlideCount": 14,
+      "structure": [
+        {
+          "title": "表紙（タイトルスライド）",
+          "type": "title-cover",
+          "guidance": "研修名・イベント名を大きく中央配置。サブタイトル、ロゴ、担当者名を配置。"
+        },
+        {
+          "title": "章タイトル（セクション区切り）",
+          "type": "section-divider",
+          "guidance": "大見出しのみ。背景ベタ塗り、パートの切り替えに使用。ページ番号なし。"
+        },
+        {
+          "title": "見出し＋本文（解説）",
+          "type": "content-explanation",
+          "guidance": "上に見出し（色付き背景帯）、下に箇条書きまたはパラグラフ。概念説明やメリット提示に使用。"
+        },
+        {
+          "title": "Before / After（左右比較）",
+          "type": "before-after",
+          "guidance": "左右同一サイズのボックス。Before（薄色）/ After（強色）のコントラスト。課題→解決策の提示。"
+        },
+        {
+          "title": "実績紹介（ケーススタディ）",
+          "type": "case-study",
+          "guidance": "写真＋クライアント名、箇条書きで成果・内容を記載。企業実績・導入支援ストーリー。"
+        },
+        {
+          "title": "図解（アイコン＋説明）",
+          "type": "icon-grid",
+          "guidance": "アイコン＋短い見出し＋短文を3〜6ブロック並べる。メリット・課題整理・要素列挙に使用。"
+        },
+        {
+          "title": "Q&A（問いかけ）",
+          "type": "qa-workshop",
+          "guidance": "大きな「質問です」などの強調、選択肢のリスト。参加者への問いかけに使用。"
+        },
+        {
+          "title": "投票・アンケート型",
+          "type": "voting-poll",
+          "guidance": "質問＋選択肢、チェックボックス風のデザイン。インタラクション用。"
+        },
+        {
+          "title": "グラフ・数値インフォグラフィック",
+          "type": "data-infographic",
+          "guidance": "引用文献表記、棒グラフ・円グラフ・数値強調ボックス。データ・統計の提示。"
+        },
+        {
+          "title": "ステップ説明（工程）",
+          "type": "process-steps",
+          "guidance": "横並びまたは縦並びのステップ、見出し＋短いテキスト。手順・ロードマップに使用。"
+        },
+        {
+          "title": "プログラム（表形式）",
+          "type": "program-table",
+          "guidance": "表形式（No/アジェンダ/概要/時間）。研修プログラム・日程表に使用。"
+        },
+        {
+          "title": "注意事項（ガイドライン）",
+          "type": "notice-guideline",
+          "guidance": "「注意」ラベル、箇条書き多め。禁止や注意書き、警告色（黄色or赤）＋アイコン（⚠）。"
+        },
+        {
+          "title": "連絡先（お問い合わせ）",
+          "type": "contact-info",
+          "guidance": "シンプルな情報＋QR or URL。会社名・ロゴ・TEL・Mail・URL。"
+        },
+        {
+          "title": "画像中心スライド",
+          "type": "image-focus",
+          "guidance": "大きな1枚画像、薄いテキストオーバーレイ。印象づけ、雰囲気作りに使用。"
+        }
+      ]
+    },
+    {
+      "id": "corporate-training-basic",
+      "name": "企業研修ベーシック",
+      "description": "基本的な研修構成（8スライド）",
+      "defaultSlideCount": 8,
+      "structure": [
+        {
+          "title": "表紙（タイトルスライド）",
+          "type": "title-cover",
+          "guidance": "研修名・イベント名を大きく中央配置"
+        },
+        {
+          "title": "章タイトル（導入）",
+          "type": "section-divider",
+          "guidance": "第1章の開始を明示"
+        },
+        {
+          "title": "背景・課題説明",
+          "type": "content-explanation",
+          "guidance": "現状の問題点や取り組むべき課題を説明"
+        },
+        {
+          "title": "解決策の提示",
+          "type": "before-after",
+          "guidance": "Before/Afterで改善内容を明示"
+        },
+        {
+          "title": "具体的な手順",
+          "type": "process-steps",
+          "guidance": "3〜5ステップで実施方法を説明"
+        },
+        {
+          "title": "実績事例",
+          "type": "case-study",
+          "guidance": "導入実績や成功事例を紹介"
+        },
+        {
+          "title": "Q&A・ワーク",
+          "type": "qa-workshop",
+          "guidance": "理解度確認や参加型ワーク"
+        },
+        {
+          "title": "まとめ・連絡先",
+          "type": "contact-info",
+          "guidance": "要点のまとめとお問い合わせ先"
+        }
+      ]
+    },
+    {
+      "id": "corporate-training-data",
+      "name": "企業研修データ重視",
+      "description": "データ・統計を多用する研修（7スライド）",
+      "defaultSlideCount": 7,
+      "structure": [
+        {
+          "title": "表紙",
+          "type": "title-cover",
+          "guidance": "研修タイトル"
+        },
+        {
+          "title": "現状のデータ",
+          "type": "data-infographic",
+          "guidance": "現状を示すグラフ・統計"
+        },
+        {
+          "title": "課題の可視化",
+          "type": "data-infographic",
+          "guidance": "課題を数値で示す"
+        },
+        {
+          "title": "解決策の提示",
+          "type": "content-explanation",
+          "guidance": "データに基づく解決策"
+        },
+        {
+          "title": "効果予測",
+          "type": "data-infographic",
+          "guidance": "期待される効果を数値化"
+        },
+        {
+          "title": "実施計画",
+          "type": "program-table",
+          "guidance": "スケジュールと担当"
+        },
+        {
+          "title": "連絡先",
+          "type": "contact-info",
+          "guidance": "お問い合わせ先"
+        }
+      ]
+    }
+  ]
+}
