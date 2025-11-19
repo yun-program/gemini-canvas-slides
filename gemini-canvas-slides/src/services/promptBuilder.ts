@@ -65,6 +65,44 @@ export function recommendSlideCount(userInput: { theme: string; details: string;
 }
 
 /**
+ * 情報量をスライド枚数に応じて再構成
+ * 多くの枚数が選ばれた場合は情報をそのまま使い、
+ * 少ない枚数が選ばれた場合は要約版の指示を追加
+ */
+function restructureContentBySlideCount(
+  userInput: { theme: string; details: string; additionalNotes?: string },
+  slideCount: number,
+  recommendedCount: number
+): string {
+  const details = userInput.details;
+  const additionalNotes = userInput.additionalNotes || '';
+
+  // スライド枚数が推奨より少ない場合、要約の指示を追加
+  if (slideCount < recommendedCount) {
+    const reductionRatio = Math.round((1 - slideCount / recommendedCount) * 100);
+    return `${details}${additionalNotes ? `\n\n${additionalNotes}` : ''}
+
+【重要】情報量の調整について：
+- 上記の情報を${slideCount}枚のスライドに収める必要があります
+- 推奨枚数は${recommendedCount}枚ですが、${slideCount}枚に絞り込みます（約${reductionRatio}%削減）
+- 最も重要なポイントのみを選択し、詳細は省略してください
+- 各スライドは簡潔に、キーメッセージのみを含めてください`;
+  } else if (slideCount > recommendedCount) {
+    const expansionRatio = Math.round((slideCount / recommendedCount - 1) * 100);
+    return `${details}${additionalNotes ? `\n\n${additionalNotes}` : ''}
+
+【重要】情報量の調整について：
+- 上記の情報を${slideCount}枚のスライドに展開します
+- 推奨枚数は${recommendedCount}枚ですが、${slideCount}枚に拡張します（約${expansionRatio}%増量）
+- 各ポイントをより詳細に展開してください
+- 具体例や補足説明を追加してください`;
+  }
+
+  // 推奨枚数と同じ場合はそのまま返す
+  return `${details}${additionalNotes ? `\n\n${additionalNotes}` : ''}`;
+}
+
+/**
  * テンプレートから骨子を生成
  */
 export function generateOutline(input: PromptInput): SlideOutline[] {
@@ -132,19 +170,35 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
  */
 export function buildPrompt(input: PromptInput): GeneratedPrompt {
   const { template, style, layoutRules, userInput } = input;
+
+  // ティースリーモードの単体生成の場合
+  if (userInput.mode === 't3' && userInput.t3SubMode === 'single' && userInput.selectedPattern) {
+    return buildSingleSlidePrompt(input, style, layoutRules, userInput.selectedPattern);
+  }
+
   const outline = generateOutline(input);
   const recommendation = recommendSlideCount(userInput);
 
-  // 段階的生成モードの場合
-  if (userInput.useStepByStep) {
+  // 段階的生成モードの場合（汎用モードのみ）
+  if (userInput.mode === 'general' && userInput.useStepByStep) {
     return buildStepByStepPrompts(input, outline, style, layoutRules, recommendation);
   }
 
   // 通常モード（一括生成）
+  // 情報量を再構成
+  const restructuredInput = {
+    ...userInput,
+    details: restructureContentBySlideCount(
+      userInput,
+      userInput.slideCount || recommendation.recommended,
+      recommendation.recommended
+    ),
+  };
+
   // プロンプトの組み立て
   const promptParts = [
     buildRoleSection(outline.length),
-    buildThemeSection(userInput),
+    buildThemeSection(restructuredInput),
     buildStyleSection(style, layoutRules),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
@@ -163,6 +217,70 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
       styleId: style.id,
       generatedAt: new Date().toISOString(),
       recommendedSlideCount: recommendation.recommended,
+      isStepByStep: false,
+    },
+  };
+}
+
+/**
+ * ティースリーモードの単体生成用プロンプトを生成
+ */
+function buildSingleSlidePrompt(
+  input: PromptInput,
+  style: PromptInput['style'],
+  layoutRules: PromptInput['layoutRules'],
+  selectedPattern: string
+): GeneratedPrompt {
+  const { template, userInput } = input;
+
+  // 選択されたパターンを取得
+  const pattern = template.structure.find(s => s.type === selectedPattern);
+
+  if (!pattern) {
+    throw new Error(`パターンが見つかりません: ${selectedPattern}`);
+  }
+
+  const promptParts = [
+    `あなたはプレゼンテーションスライド作成の専門家です。
+以下の指示に従って、**1枚の**スライドコンテンツを作成してください。
+
+【重要】Gemini Canvasでの出力形式について：
+- **静的なスライドコンテンツとして出力**してください
+- ナビゲーション要素（「次へ」「前へ」ボタンなど）は一切含めないでください
+- 動的なUI要素やインタラクティブ要素は使用しないでください`,
+    buildThemeSection(userInput),
+    `【スライドタイプ】
+タイプ: ${pattern.title}
+用途: ${pattern.guidance}
+
+このスライドタイプに最適なレイアウトと内容で、1枚のスライドを作成してください。`,
+    buildStyleSection(style, layoutRules),
+    buildConstraintsSection(layoutRules),
+    buildGeminiCanvasSection(),
+    `【実行指示】
+
+**以上の指示に従って、今すぐ「${pattern.title}」タイプの1枚のスライドを作成してください。**
+
+重要: スライドの「仕様説明」や「メタ情報」ではなく、実際のスライドコンテンツそのものを作成してください。`,
+  ];
+
+  const prompt = promptParts.join('\n\n');
+
+  // 単体生成用のアウトライン
+  const outline: SlideOutline[] = [{
+    slideNumber: 1,
+    title: pattern.title,
+    keyPoints: [pattern.guidance],
+    notes: `テーマ: ${userInput.theme}\n${userInput.details}`
+  }];
+
+  return {
+    prompt,
+    outline,
+    metadata: {
+      templateId: template.id,
+      styleId: style.id,
+      generatedAt: new Date().toISOString(),
       isStepByStep: false,
     },
   };

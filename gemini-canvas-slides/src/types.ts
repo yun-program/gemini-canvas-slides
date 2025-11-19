@@ -72,6 +72,10 @@ export interface StyleConfig {
   layoutRules: LayoutRules;
 }
 
+// モード定義
+export type AppMode = 'general' | 't3'; // 汎用モード | ティースリーモード
+export type T3SubMode = 'set' | 'single'; // セット生成 | 単体生成
+
 // ユーザー入力の型
 export interface UserInput {
   theme: string;
@@ -79,7 +83,10 @@ export interface UserInput {
   targetAudience?: string;
   additionalNotes?: string;
   slideCount?: number; // カスタムスライド枚数
-  useStepByStep?: boolean; // 段階的生成モードを使用するか
+  useStepByStep?: boolean; // 段階的生成モードを使用するか（汎用モードのみ）
+  mode?: AppMode; // 使用するモード
+  t3SubMode?: T3SubMode; // ティースリーモードのサブモード
+  selectedPattern?: string; // 単体生成時に選択されたパターン
 }
 
 // 骨子（アウトライン）の型
