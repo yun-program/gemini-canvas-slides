@@ -34,7 +34,7 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
     buildStyleSection(style, layoutRules),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
-    buildGoogleSlidesSection(),
+    buildGeminiCanvasSection(),
   ];
 
   const prompt = promptParts.join('\n\n');
@@ -83,23 +83,49 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
  * スタイル規定セクション
  */
 function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules']): string {
-  return `【スタイル規定】
-- スライドサイズ: ${layoutRules.aspectRatio}
-- フォント: ${style.font.family} (代替: ${style.font.fallback})
-- カラースキーム: ${style.name}
+  const sizes = style.sizes as any;
+  const colors = style.colors as any;
+
+  // フォントサイズセクション
+  let fontSizeSection = `【フォントサイズ】（重要：必ずpxで指定してください）
+- 大見出し（タイトル）: ${sizes.titleSlide || style.sizes.titleSlide}
+- スライドタイトル: ${sizes.slideTitle || style.sizes.slideTitle}`;
+
+  if (sizes.heading) {
+    fontSizeSection += `\n- 見出し: ${sizes.heading}`;
+  }
+  fontSizeSection += `\n- 本文: ${sizes.body || style.sizes.body}`;
+
+  if (sizes.bodySmall) {
+    fontSizeSection += `\n- 本文（小）: ${sizes.bodySmall}`;
+  }
+  if (sizes.citation) {
+    fontSizeSection += `\n- 引用・注釈: ${sizes.citation}`;
+  }
+
+  // カラーセクション
+  let colorSection = `- カラースキーム: ${style.name}
   - メインカラー: ${style.colors.primary}
   - サブカラー: ${style.colors.secondary}
   - テキスト: ${style.colors.text}
-  - 背景: ${style.colors.background}
+  - 背景: ${style.colors.background}`;
 
-【フォントサイズ】
-- タイトルスライド: ${style.sizes.titleSlide}
-- スライドタイトル: ${style.sizes.slideTitle}
-- 本文: ${style.sizes.body}
-- キャプション: ${style.sizes.caption}
+  if (colors.pointRed) {
+    colorSection += `\n  - ポイント（赤）: ${colors.pointRed}（強調時に使用、#f00ではなく落ち着いた赤）`;
+  }
 
-【レイアウト】
+  return `【スタイル規定】
+- スライドサイズ: ${layoutRules.aspectRatio}
+- フォント: ${style.font.family} (代替: ${style.font.fallback})
+${colorSection}
+
+${fontSizeSection}
+
+【レイアウト・配置ルール】
 - 余白: 上下${layoutRules.margins.top}/${layoutRules.margins.bottom}、左右${layoutRules.margins.left}/${layoutRules.margins.right}
+- テキスト配置: 基本は左揃え（表のタイトルや元資料で中央揃えのものは中央揃えに）
+- テキスト左上の開始位置を揃える（下に余白ができるのは可）
+- 表が連続するページは位置を揃える（スライド移動でズレないように）
 - 箇条書き: ${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目（1項目あたり${layoutRules.bulletPoints.characterLimit}文字以内）`;
 }
 
@@ -132,22 +158,45 @@ function buildConstraintsSection(layoutRules: PromptInput['layoutRules']): strin
 }
 
 /**
- * Googleスライド対応セクション
+ * Gemini Canvas → Googleスライド エクスポート対応セクション
  */
-function buildGoogleSlidesSection(): string {
-  return `【Googleスライドエクスポート対応】
+function buildGeminiCanvasSection(): string {
+  return `【重要：Gemini Canvas → Googleスライドエクスポートの注意事項】
+
+▼ フォントサイズについて
+- 上記で指定したフォントサイズは「px（ピクセル）」単位です
+- pt（ポイント）ではなく、必ずpx単位で指定してください
+- この数値は、Googleスライドへのエクスポート後に正しいサイズになるよう調整済みです
+- 指定された数値を厳密に守ってください
+
+▼ レイアウトの原則
 - シンプルなレイアウトを使用（複雑な図形配置は避ける）
 - アニメーション効果は使用しない
-- フォントは標準的なものを使用
 - 画像を使う場合は説明テキストも必ず添える
 - テーブルは3列×5行以内に収める
+- 表が複数ページにわたる場合、位置を揃える
+
+▼ テキスト配置の徹底
+- 文字は左揃えで統一（中央揃えは表のタイトルなど特定の場合のみ）
+- テキストの左上開始位置を各スライドで揃える
+- 下側に余白ができるのは問題なし
+
+▼ 色の使用
+- ポイント強調には指定された「ポイント（赤）」を使用
+- 鮮やかすぎる赤（#f00など）は避け、落ち着いた赤を使用
 
 【出力形式】
 各スライドを明確に区切って出力してください。
 各スライドには以下を含めてください：
 1. スライド番号とタイトル
-2. 本文内容
-3. （必要に応じて）スピーカーノート`;
+2. 本文内容（箇条書き、表、図解など）
+3. （必要に応じて）スピーカーノート
+
+【エクスポート後の確認事項】
+Googleスライドにエクスポート後、以下を確認してください：
+- フォントサイズが意図通りか
+- 表の位置がズレていないか
+- テキストの配置（左揃え）が保たれているか`;
 }
 
 /**
