@@ -113,6 +113,9 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
   if (colors.pointRed) {
     colorSection += `\n  - ポイント（赤）: ${colors.pointRed}（強調時に使用、#f00ではなく落ち着いた赤）`;
   }
+  if (colors.sectionDividerGray) {
+    colorSection += `\n  - セクション区切り（背景）: ${colors.sectionDividerGray}（章タイトルの背景色）`;
+  }
 
   return `【スタイル規定】
 - スライドサイズ: ${layoutRules.aspectRatio}
@@ -184,6 +187,8 @@ function buildGeminiCanvasSection(): string {
 ▼ 色の使用
 - ポイント強調には指定された「ポイント（赤）」を使用
 - 鮮やかすぎる赤（#f00など）は避け、落ち着いた赤を使用
+- 章タイトル（セクション区切り）の背景色には指定された「セクション区切り（背景）」を使用
+- 各スライドタイプに応じて、指定された色を厳密に守ってください
 
 【出力形式】
 各スライドを明確に区切って出力してください。

@@ -15,7 +15,8 @@
         "textLight": "#6B7280",
         "background": "#FFFFFF",
         "accent": "#DBEAFE",
-        "pointRed": "#CC0000"
+        "pointRed": "#CC0000",
+        "sectionDividerGray": "#444746"
       },
       "sizes": {
         "titleSlide": "43px",
@@ -67,7 +68,11 @@
     },
     "colorUsage": {
       "pointRed": "#CC0000",
-      "note": "ポイントの赤色は #f00 ではなく、暗めの落ち着いた赤を使用"
+      "sectionDividerGray": "#444746",
+      "notes": {
+        "pointRed": "ポイントの赤色は #f00 ではなく、暗めの落ち着いた赤を使用",
+        "sectionDividerGray": "章タイトル（セクション区切り）の背景色。見本スライドに基づく"
+      }
     }
   }
 }
