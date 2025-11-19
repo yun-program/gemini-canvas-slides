@@ -11,8 +11,9 @@
       "colors": {
         "primary": "#2563EB",
         "secondary": "#60A5FA",
-        "text": "#1F2937",
+        "text": "#434343",
         "textLight": "#6B7280",
+        "textOnDark": "#FFFFFF",
         "background": "#FFFFFF",
         "accent": "#DBEAFE",
         "pointRed": "#CC0000",
@@ -69,9 +70,11 @@
     "colorUsage": {
       "pointRed": "#CC0000",
       "sectionDividerGray": "#444746",
+      "textOnDark": "#FFFFFF",
       "notes": {
         "pointRed": "ポイントの赤色は #f00 ではなく、暗めの落ち着いた赤を使用",
-        "sectionDividerGray": "章タイトル（セクション区切り）の背景色。見本スライドに基づく"
+        "sectionDividerGray": "章タイトル（セクション区切り）の背景色。見本スライドに基づく",
+        "textOnDark": "濃い背景（セクション区切りなど）の上のテキストは白色を使用。背景とのコントラストを確保"
       }
     }
   }
