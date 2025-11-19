@@ -38,13 +38,15 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
     if (details || additionalNotes) {
       const rec = recommendSlideCount({ theme, details, additionalNotes });
       setRecommendation(rec);
-      // ユーザーがまだスライド枚数を設定していない場合は推奨値を設定
+      // ユーザーがまだスライド枚数を設定していない場合のみ推奨値を設定
+      // slideCountInputとslideCountを依存配列から除外することで、
+      // ユーザーが手動で削除したときに自動設定されるのを防ぐ
       if (slideCountInput === '' && slideCount === undefined) {
         setSlideCount(rec.recommended);
         setSlideCountInput(rec.recommended.toString());
       }
     }
-  }, [details, additionalNotes, theme, slideCount, slideCountInput]);
+  }, [details, additionalNotes, theme]);
 
   const handleFilesProcessed = (content: string) => {
     // ファイルの内容を詳細情報に追加
