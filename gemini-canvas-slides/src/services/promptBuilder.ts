@@ -55,7 +55,13 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
  */
 function buildRoleSection(): string {
   return `あなたはプレゼンテーションスライド作成の専門家です。
-以下の指示に従って、Googleスライドにエクスポートしても崩れない形式でスライドを作成してください。`;
+以下の指示に従って、Googleスライドにエクスポート可能な静的なスライドを作成してください。
+
+【重要】Gemini Canvasでの出力形式について：
+- 静的なスライドコンテンツとして出力してください
+- ナビゲーション要素（「次へ」「前へ」ボタンなど）は一切含めないでください
+- 動的なUI要素やインタラクティブ要素は使用しないでください
+- 各スライドは独立した静的なページとして作成してください`;
 }
 
 /**
@@ -69,7 +75,7 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
   }
 
   if (userInput.targetAudience) {
-    section += `\n\n対象者: ${userInput.targetAudience}`;
+    section += `\n\n【参考情報】対象者について:\n${userInput.targetAudience}\n※この対象者情報は、スライドの内容や表現レベルを調整するための参考情報です。\n※スライド上に「対象者: ○○」と直接表示しないでください。\n※この情報を踏まえて、適切な専門性レベルと表現方法でコンテンツを作成してください。`;
   }
 
   if (userInput.additionalNotes) {
@@ -105,10 +111,10 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
 
   // カラーセクション
   let colorSection = `- カラースキーム: ${style.name}
-  - メインカラー: ${style.colors.primary}
-  - サブカラー: ${style.colors.secondary}
-  - テキスト: ${style.colors.text}
-  - 背景: ${style.colors.background}`;
+  - **デフォルトテキスト色: ${style.colors.text}（重要：すべての通常テキストはこの色を使用）**
+  - 背景: ${style.colors.background}
+  - メインカラー: ${style.colors.primary}（タイトルや装飾に使用）
+  - サブカラー: ${style.colors.secondary}（アクセントに使用）`;
 
   if (colors.pointRed) {
     colorSection += `\n  - ポイント（赤）: ${colors.pointRed}（強調時に使用、#f00ではなく落ち着いた赤）`;
@@ -116,6 +122,12 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
   if (colors.sectionDividerGray) {
     colorSection += `\n  - セクション区切り（背景）: ${colors.sectionDividerGray}（章タイトルの背景色）`;
   }
+
+  colorSection += `\n\n【色使用の原則】
+  - 本文テキスト: 必ず「デフォルトテキスト色（${style.colors.text}）」を使用
+  - タイトル: メインカラーまたはデフォルトテキスト色
+  - 強調箇所のみ: ポイント（赤）を使用
+  - 青色（${style.colors.primary}）は装飾やタイトルにのみ使用し、本文には使用しない`;
 
   return `【スタイル規定】
 - スライドサイズ: ${layoutRules.aspectRatio}
@@ -166,6 +178,18 @@ function buildConstraintsSection(layoutRules: PromptInput['layoutRules']): strin
 function buildGeminiCanvasSection(): string {
   return `【重要：Gemini Canvas → Googleスライドエクスポートの注意事項】
 
+▼ 出力形式について（最重要）
+- **静的なスライドコンテンツのみを出力**してください
+- **ナビゲーション要素（次へ/前へボタン、ページ送り、インデックスなど）は絶対に含めない**でください
+- **動的なUI要素やインタラクティブ要素を使用しない**でください
+- 各スライドは完全に独立した静的ページとして作成してください
+- Googleスライドへのエクスポートを前提とした、シンプルで静的なレイアウトを使用してください
+
+▼ テキスト色について（重要）
+- **本文テキストは必ず指定された「デフォルトテキスト色」を使用**してください
+- 青色をデフォルトテキストに使用しないでください
+- 青色は装飾やタイトルにのみ使用し、本文には使用しないでください
+
 ▼ フォントサイズについて
 - 上記で指定したフォントサイズは「px（ピクセル）」単位です
 - pt（ポイント）ではなく、必ずpx単位で指定してください
@@ -199,6 +223,8 @@ function buildGeminiCanvasSection(): string {
 
 【エクスポート後の確認事項】
 Googleスライドにエクスポート後、以下を確認してください：
+- ナビゲーション要素が含まれていないか
+- 本文テキストの色が指定されたデフォルトテキスト色になっているか
 - フォントサイズが意図通りか
 - 表の位置がズレていないか
 - テキストの配置（左揃え）が保たれているか`;
