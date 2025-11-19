@@ -3,7 +3,7 @@ import InputForm from './components/InputForm';
 import StyleSettings from './components/StyleSettings';
 import PromptDisplay from './components/PromptDisplay';
 import { buildPrompt } from './services/promptBuilder';
-import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig } from './types';
+import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, T3SubMode } from './types';
 
 // 設定ファイルのインポート
 import templatesData from '../config/templates.json';
@@ -12,36 +12,60 @@ import templatesCorporateData from '../config/templates_corporate.json';
 import stylesCorporateData from '../config/styles_corporate.json';
 
 function App() {
-  // テンプレートとスタイルをマージ
-  const templates = [
-    ...(templatesData as TemplateConfig).templates,
-    ...(templatesCorporateData as TemplateConfig).templates,
-  ];
-  const styles = [
-    ...(stylesData as StyleConfig).styles,
-    ...(stylesCorporateData as StyleConfig).styles,
-  ];
-  // 企業研修用のレイアウトルールを優先
-  const layoutRules = (stylesCorporateData as StyleConfig).layoutRules || (stylesData as StyleConfig).layoutRules;
+  // モード管理
+  const [appMode, setAppMode] = useState<AppMode>('general');
+  const [t3SubMode, setT3SubMode] = useState<T3SubMode>('set');
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0].id);
-  const [selectedStyleId, setSelectedStyleId] = useState(styles[0].id);
+  // 汎用モード用のテンプレート
+  const generalTemplates = (templatesData as TemplateConfig).templates;
+  const generalStyles = (stylesData as StyleConfig).styles;
+  const generalLayoutRules = (stylesData as StyleConfig).layoutRules;
+
+  // ティースリーモード用のテンプレート
+  const t3Templates = (templatesCorporateData as TemplateConfig).templates;
+  const t3Styles = (stylesCorporateData as StyleConfig).styles;
+  const t3LayoutRules = (stylesCorporateData as StyleConfig).layoutRules;
+
+  // 現在のモードに応じたテンプレートとスタイルを取得
+  const currentTemplates = appMode === 'general' ? generalTemplates : t3Templates;
+  const currentStyles = appMode === 'general' ? generalStyles : t3Styles;
+  const currentLayoutRules = appMode === 'general' ? generalLayoutRules : t3LayoutRules;
+
+  const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplates[0].id);
+  const [selectedStyleId, setSelectedStyleId] = useState(currentStyles[0].id);
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
 
+  // モード変更時にテンプレートとスタイルをリセット
+  const handleModeChange = (mode: AppMode) => {
+    setAppMode(mode);
+    const newTemplates = mode === 'general' ? generalTemplates : t3Templates;
+    const newStyles = mode === 'general' ? generalStyles : t3Styles;
+    setSelectedTemplateId(newTemplates[0].id);
+    setSelectedStyleId(newStyles[0].id);
+    setGeneratedPrompt(null);
+  };
+
   const handleSubmit = (userInput: UserInput) => {
-    const template = templates.find(t => t.id === selectedTemplateId);
-    const style = styles.find(s => s.id === selectedStyleId);
+    const template = currentTemplates.find(t => t.id === selectedTemplateId);
+    const style = currentStyles.find(s => s.id === selectedStyleId);
 
     if (!template || !style) {
       console.error('テンプレートまたはスタイルが見つかりません');
       return;
     }
 
+    // モード情報をuserInputに追加
+    const inputWithMode = {
+      ...userInput,
+      mode: appMode,
+      t3SubMode: appMode === 't3' ? t3SubMode : undefined,
+    };
+
     const result = buildPrompt({
       template,
       style,
-      layoutRules,
-      userInput,
+      layoutRules: currentLayoutRules,
+      userInput: inputWithMode,
     });
 
     setGeneratedPrompt(result);
@@ -59,7 +83,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* ヘッダー */}
-        <header className="text-center mb-12">
+        <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-3">
             Gemini Canvas Slide Prompt Generator
           </h1>
@@ -74,12 +98,64 @@ function App() {
           </div>
         </header>
 
+        {/* モード選択タブ */}
+        <div className="mb-8">
+          <div className="flex justify-center space-x-2 bg-white rounded-lg shadow p-2 max-w-md mx-auto">
+            <button
+              onClick={() => handleModeChange('general')}
+              className={`flex-1 py-3 px-6 rounded-md font-semibold transition-colors ${
+                appMode === 'general'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              汎用モード
+            </button>
+            <button
+              onClick={() => handleModeChange('t3')}
+              className={`flex-1 py-3 px-6 rounded-md font-semibold transition-colors ${
+                appMode === 't3'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              ティースリーモード
+            </button>
+          </div>
+
+          {/* ティースリーモード時のサブモード選択 */}
+          {appMode === 't3' && (
+            <div className="flex justify-center space-x-2 mt-4 max-w-md mx-auto">
+              <button
+                onClick={() => setT3SubMode('set')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  t3SubMode === 'set'
+                    ? 'bg-purple-100 text-purple-800 border-2 border-purple-600'
+                    : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                セット生成
+              </button>
+              <button
+                onClick={() => setT3SubMode('single')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  t3SubMode === 'single'
+                    ? 'bg-purple-100 text-purple-800 border-2 border-purple-600'
+                    : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                単体生成
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 左カラム: 設定 */}
           <div className="lg:col-span-1">
             <StyleSettings
-              templates={templates}
-              styles={styles}
+              templates={currentTemplates}
+              styles={currentStyles}
               selectedTemplateId={selectedTemplateId}
               selectedStyleId={selectedStyleId}
               onTemplateChange={setSelectedTemplateId}
@@ -93,7 +169,12 @@ function App() {
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">
                 スライド情報を入力
               </h2>
-              <InputForm onSubmit={handleSubmit} />
+              <InputForm
+                onSubmit={handleSubmit}
+                mode={appMode}
+                t3SubMode={t3SubMode}
+                templates={currentTemplates}
+              />
             </div>
           </div>
         </div>
