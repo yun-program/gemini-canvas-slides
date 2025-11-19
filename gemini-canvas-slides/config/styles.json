@@ -91,6 +91,32 @@
         "body": "24pt",
         "caption": "18pt"
       }
+    },
+    {
+      "id": "corporate-training",
+      "name": "企業研修",
+      "description": "企業研修用テンプレート（見本スライド準拠）",
+      "font": {
+        "family": "Noto Sans JP",
+        "fallback": "Yu Gothic, sans-serif"
+      },
+      "colors": {
+        "primary": "#002d65",
+        "secondary": "#003a77",
+        "text": "#002d65",
+        "textLight": "#6B7280",
+        "background": "#FFFFFF",
+        "accent": "#cfe2f3",
+        "emphasis": "#ef7e00",
+        "sectionDivider": "#d3d2d2",
+        "success": "#57d38c"
+      },
+      "sizes": {
+        "titleSlide": "40pt",
+        "slideTitle": "32pt",
+        "body": "24pt",
+        "caption": "18pt"
+      }
     }
   ],
   "layoutRules": {
