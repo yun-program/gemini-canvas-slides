@@ -8,13 +8,15 @@ interface InputFormProps {
   mode: AppMode;
   t3SubMode?: T3SubMode;
   templates: Template[];
+  isGenerating?: boolean;
 }
 
-export default function InputForm({ onSubmit, mode, t3SubMode, templates }: InputFormProps) {
+export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGenerating }: InputFormProps) {
   const [theme, setTheme] = useState('');
   const [details, setDetails] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+  const [slideCountInput, setSlideCountInput] = useState('');
   const [slideCount, setSlideCount] = useState<number | undefined>(undefined);
   const [useStepByStep, setUseStepByStep] = useState(false);
   const [selectedPattern, setSelectedPattern] = useState('');
@@ -37,11 +39,12 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
       const rec = recommendSlideCount({ theme, details, additionalNotes });
       setRecommendation(rec);
       // ユーザーがまだスライド枚数を設定していない場合は推奨値を設定
-      if (slideCount === undefined) {
+      if (slideCountInput === '' && slideCount === undefined) {
         setSlideCount(rec.recommended);
+        setSlideCountInput(rec.recommended.toString());
       }
     }
-  }, [details, additionalNotes, theme, slideCount]);
+  }, [details, additionalNotes, theme, slideCount, slideCountInput]);
 
   const handleFilesProcessed = (content: string) => {
     // ファイルの内容を詳細情報に追加
@@ -51,6 +54,19 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
       }
       return content;
     });
+  };
+
+  const handleSlideCountChange = (value: string) => {
+    setSlideCountInput(value);
+    // 入力値が有効な数値の場合のみslideCountを更新
+    if (value === '') {
+      setSlideCount(undefined);
+    } else {
+      const num = parseInt(value, 10);
+      if (!isNaN(num) && num >= 3 && num <= 20) {
+        setSlideCount(num);
+      }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -82,20 +98,10 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* ファイルアップロード */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          ファイルアップロード（オプション）
-        </label>
-        <FileUploader onFilesProcessed={handleFilesProcessed} />
-        <p className="mt-2 text-xs text-gray-500">
-          PDF、Word、テキスト、画像ファイルから情報を取り込めます。内容は「詳細情報」に追加されます。
-        </p>
-      </div>
-
+      {/* テーマ */}
       <div>
         <label htmlFor="theme" className="block text-sm font-semibold text-gray-700 mb-2">
-          テーマ <span className="text-red-500">*</span>
+          1. テーマ <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -106,11 +112,15 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
           required
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
+        <p className="mt-1 text-xs text-gray-500">
+          スライドのメインテーマを入力してください。
+        </p>
       </div>
 
+      {/* 詳細情報 */}
       <div>
         <label htmlFor="details" className="block text-sm font-semibold text-gray-700 mb-2">
-          詳細情報 <span className="text-red-500">*</span>
+          2. 詳細情報 <span className="text-red-500">*</span>
         </label>
         <textarea
           id="details"
@@ -122,7 +132,18 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
         />
         <p className="mt-1 text-xs text-gray-500">
-          できるだけ具体的に記入してください。キーワードだけでなく、文脈や背景も含めると良いプロンプトが生成されます。
+          テキストで直接入力するか、下のファイルアップロードから情報を取り込むこともできます。
+        </p>
+      </div>
+
+      {/* ファイルアップロード */}
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          📎 ファイルから情報を追加（オプション）
+        </label>
+        <FileUploader onFilesProcessed={handleFilesProcessed} />
+        <p className="mt-2 text-xs text-gray-500">
+          PDF、Word、テキスト、画像ファイルから情報を取り込めます。内容は上の「詳細情報」に自動追加されます。
         </p>
       </div>
 
@@ -190,14 +211,14 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
             <input
               type="number"
               id="slideCount"
-              value={slideCount || ''}
-              onChange={(e) => setSlideCount(e.target.value ? parseInt(e.target.value) : undefined)}
+              value={slideCountInput}
+              onChange={(e) => handleSlideCountChange(e.target.value)}
               min="3"
               max="20"
               placeholder="自動推奨"
               className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            <span className="text-sm text-gray-600">枚</span>
+            <span className="text-sm text-gray-600">枚（3〜20枚）</span>
           </div>
           {recommendation && (
             <div className="mt-3 text-sm">
@@ -210,6 +231,9 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
               </p>
             </div>
           )}
+          <p className="mt-2 text-xs text-gray-500">
+            情報量に応じて自動で推奨枚数が計算されます。推奨より少ない枚数を指定すると、内容が自動的に要約されます。
+          </p>
         </div>
       )}
 
@@ -249,10 +273,10 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates }: Inpu
 
       <button
         type="submit"
-        disabled={!theme || !details || (mode === 't3' && t3SubMode === 'single' && !selectedPattern)}
+        disabled={!theme || !details || (mode === 't3' && t3SubMode === 'single' && !selectedPattern) || isGenerating}
         className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
       >
-        プロンプトを生成
+        {isGenerating ? '生成中...' : 'プロンプトを生成'}
       </button>
     </form>
   );
