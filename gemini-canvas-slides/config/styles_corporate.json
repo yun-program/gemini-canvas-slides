@@ -14,10 +14,11 @@
         "text": "#434343",
         "textLight": "#6B7280",
         "textOnDark": "#FFFFFF",
-        "background": "#FFFFFF",
+        "background": "#f9f9f9",
         "accent": "#DBEAFE",
         "pointRed": "#CC0000",
-        "sectionDividerGray": "#444746"
+        "sectionDividerGray": "#444746",
+        "titleColor": "#000000"
       },
       "sizes": {
         "titleSlide": "43px",
