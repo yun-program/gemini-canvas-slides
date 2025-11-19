@@ -1,0 +1,114 @@
+{
+  "styles": [
+    {
+      "id": "business-blue",
+      "name": "ビジネスブルー",
+      "description": "信頼感のある青系（企業向け）",
+      "font": {
+        "family": "Noto Sans JP",
+        "fallback": "Yu Gothic, sans-serif"
+      },
+      "colors": {
+        "primary": "#1E40AF",
+        "secondary": "#3B82F6",
+        "text": "#1F2937",
+        "textLight": "#6B7280",
+        "background": "#FFFFFF",
+        "accent": "#DBEAFE"
+      },
+      "sizes": {
+        "titleSlide": "40pt",
+        "slideTitle": "32pt",
+        "body": "24pt",
+        "caption": "18pt"
+      }
+    },
+    {
+      "id": "modern-purple",
+      "name": "モダンパープル",
+      "description": "創造的な紫系（クリエイティブ向け）",
+      "font": {
+        "family": "Noto Sans JP",
+        "fallback": "Yu Gothic, sans-serif"
+      },
+      "colors": {
+        "primary": "#7C3AED",
+        "secondary": "#A78BFA",
+        "text": "#1F2937",
+        "textLight": "#6B7280",
+        "background": "#FFFFFF",
+        "accent": "#EDE9FE"
+      },
+      "sizes": {
+        "titleSlide": "40pt",
+        "slideTitle": "32pt",
+        "body": "24pt",
+        "caption": "18pt"
+      }
+    },
+    {
+      "id": "fresh-green",
+      "name": "フレッシュグリーン",
+      "description": "活発な緑系（教育・環境向け）",
+      "font": {
+        "family": "Noto Sans JP",
+        "fallback": "Yu Gothic, sans-serif"
+      },
+      "colors": {
+        "primary": "#059669",
+        "secondary": "#10B981",
+        "text": "#1F2937",
+        "textLight": "#6B7280",
+        "background": "#FFFFFF",
+        "accent": "#D1FAE5"
+      },
+      "sizes": {
+        "titleSlide": "40pt",
+        "slideTitle": "32pt",
+        "body": "24pt",
+        "caption": "18pt"
+      }
+    },
+    {
+      "id": "elegant-gray",
+      "name": "エレガントグレー",
+      "description": "洗練されたグレー系（高級感）",
+      "font": {
+        "family": "Noto Sans JP",
+        "fallback": "Yu Gothic, sans-serif"
+      },
+      "colors": {
+        "primary": "#374151",
+        "secondary": "#6B7280",
+        "text": "#1F2937",
+        "textLight": "#9CA3AF",
+        "background": "#FFFFFF",
+        "accent": "#F3F4F6"
+      },
+      "sizes": {
+        "titleSlide": "40pt",
+        "slideTitle": "32pt",
+        "body": "24pt",
+        "caption": "18pt"
+      }
+    }
+  ],
+  "layoutRules": {
+    "aspectRatio": "16:9",
+    "margins": {
+      "top": "60px",
+      "bottom": "60px",
+      "left": "80px",
+      "right": "80px"
+    },
+    "bulletPoints": {
+      "min": 3,
+      "max": 5,
+      "characterLimit": 60
+    },
+    "textLimits": {
+      "slideTitle": 40,
+      "bodyPerSlide": 300
+    }
+  }
+}

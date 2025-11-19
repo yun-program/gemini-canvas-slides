@@ -1,0 +1,109 @@
+// スライド構造の型定義
+export interface SlideStructure {
+  title: string;
+  type: string;
+  guidance: string;
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  defaultSlideCount: number;
+  structure: SlideStructure[];
+}
+
+export interface TemplateConfig {
+  templates: Template[];
+}
+
+// スタイル定義の型
+export interface FontConfig {
+  family: string;
+  fallback: string;
+}
+
+export interface ColorConfig {
+  primary: string;
+  secondary: string;
+  text: string;
+  textLight: string;
+  background: string;
+  accent: string;
+}
+
+export interface SizeConfig {
+  titleSlide: string;
+  slideTitle: string;
+  body: string;
+  caption: string;
+}
+
+export interface Style {
+  id: string;
+  name: string;
+  description: string;
+  font: FontConfig;
+  colors: ColorConfig;
+  sizes: SizeConfig;
+}
+
+export interface LayoutRules {
+  aspectRatio: string;
+  margins: {
+    top: string;
+    bottom: string;
+    left: string;
+    right: string;
+  };
+  bulletPoints: {
+    min: number;
+    max: number;
+    characterLimit: number;
+  };
+  textLimits: {
+    slideTitle: number;
+    bodyPerSlide: number;
+  };
+}
+
+export interface StyleConfig {
+  styles: Style[];
+  layoutRules: LayoutRules;
+}
+
+// ユーザー入力の型
+export interface UserInput {
+  theme: string;
+  details: string;
+  targetAudience?: string;
+  additionalNotes?: string;
+}
+
+// 骨子（アウトライン）の型
+export interface SlideOutline {
+  slideNumber: number;
+  title: string;
+  keyPoints: string[];
+  notes?: string;
+}
+
+// プロンプト生成の入力
+export interface PromptInput {
+  template: Template;
+  style: Style;
+  layoutRules: LayoutRules;
+  userInput: UserInput;
+  customSlides?: SlideOutline[];
+}
+
+// 生成されたプロンプト
+export interface GeneratedPrompt {
+  prompt: string;
+  outline: SlideOutline[];
+  metadata: {
+    templateId: string;
+    styleId: string;
+    generatedAt: string;
+  };
+}

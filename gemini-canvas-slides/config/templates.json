@@ -1,0 +1,141 @@
+{
+  "templates": [
+    {
+      "id": "business",
+      "name": "ビジネスプレゼン",
+      "description": "企業向け提案・報告用",
+      "defaultSlideCount": 5,
+      "structure": [
+        {
+          "title": "タイトルスライド",
+          "type": "title",
+          "guidance": "プレゼンのタイトルと発表者情報"
+        },
+        {
+          "title": "背景・課題",
+          "type": "problem",
+          "guidance": "現状の問題点や取り組むべき課題"
+        },
+        {
+          "title": "解決策・提案",
+          "type": "solution",
+          "guidance": "課題に対する具体的な解決策"
+        },
+        {
+          "title": "実施計画・効果",
+          "type": "plan",
+          "guidance": "実施スケジュールと期待される効果"
+        },
+        {
+          "title": "まとめ・次のステップ",
+          "type": "summary",
+          "guidance": "要点のまとめと今後のアクション"
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "name": "教育・研修",
+      "description": "研修・セミナー用",
+      "defaultSlideCount": 6,
+      "structure": [
+        {
+          "title": "タイトルスライド",
+          "type": "title",
+          "guidance": "研修タイトルと対象者"
+        },
+        {
+          "title": "学習目標",
+          "type": "objective",
+          "guidance": "この研修で学べること"
+        },
+        {
+          "title": "基礎知識",
+          "type": "foundation",
+          "guidance": "理解に必要な基本事項"
+        },
+        {
+          "title": "実践ポイント①",
+          "type": "content",
+          "guidance": "具体的な実践内容（その1）"
+        },
+        {
+          "title": "実践ポイント②",
+          "type": "content",
+          "guidance": "具体的な実践内容（その2）"
+        },
+        {
+          "title": "まとめ・振り返り",
+          "type": "review",
+          "guidance": "学習内容の確認と次のステップ"
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "name": "製品・サービス紹介",
+      "description": "商品説明・デモ用",
+      "defaultSlideCount": 5,
+      "structure": [
+        {
+          "title": "タイトルスライド",
+          "type": "title",
+          "guidance": "製品名とキャッチコピー"
+        },
+        {
+          "title": "製品概要",
+          "type": "overview",
+          "guidance": "製品の特徴と対象ユーザー"
+        },
+        {
+          "title": "主な機能",
+          "type": "features",
+          "guidance": "核となる3-5つの機能"
+        },
+        {
+          "title": "活用事例",
+          "type": "usecase",
+          "guidance": "実際の使用例やメリット"
+        },
+        {
+          "title": "価格・お問い合わせ",
+          "type": "cta",
+          "guidance": "料金プランと連絡先情報"
+        }
+      ]
+    },
+    {
+      "id": "report",
+      "name": "活動報告",
+      "description": "プロジェクト報告用",
+      "defaultSlideCount": 5,
+      "structure": [
+        {
+          "title": "タイトルスライド",
+          "type": "title",
+          "guidance": "報告タイトルと報告者"
+        },
+        {
+          "title": "活動概要",
+          "type": "overview",
+          "guidance": "期間、目的、体制"
+        },
+        {
+          "title": "主な成果",
+          "type": "achievement",
+          "guidance": "達成した成果と数値"
+        },
+        {
+          "title": "課題と対応",
+          "type": "issue",
+          "guidance": "直面した課題と解決策"
+        },
+        {
+          "title": "今後の予定",
+          "type": "future",
+          "guidance": "次のステップと計画"
+        }
+      ]
+    }
+  ]
+}
