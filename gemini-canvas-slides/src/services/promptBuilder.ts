@@ -197,12 +197,12 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 
   // プロンプトの組み立て
   const promptParts = [
-    buildRoleSection(outline.length),
+    buildRoleSection(outline.length, userInput.mode),
     buildThemeSection(restructuredInput),
-    buildStyleSection(style, layoutRules),
+    buildStyleSection(style, layoutRules, userInput.mode),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
-    buildGeminiCanvasSection(),
+    buildGeminiCanvasSection(userInput.mode),
     buildOutputExampleSection(),
     buildExecutionSection(outline.length),
   ];
@@ -241,7 +241,9 @@ function buildSingleSlidePrompt(
   }
 
   const promptParts = [
-    `あなたはプレゼンテーションスライド作成の専門家です。
+    `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【最重要】1枚のプレゼンテーションスライドを今すぐ作成してください。**
 
@@ -255,6 +257,8 @@ function buildSingleSlidePrompt(
 - HTML/CSS/JavaScriptコードは一切書かないでください
 - ナビゲーション要素（次へ/前へボタン）は含めないでください
 - インタラクティブな要素（ボタン、フォーム）は使用しないでください
+- **絵文字は使用しないでください**（エクスポート時に変形する問題があるため）
+- **スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）${userInput.mode === 't3' ? '\n- **本文テキストに青色を使用せず、必ずデフォルトテキスト色（グレー系）を使用してください**' : ''}
 - Googleスライドにエクスポート可能な形式で作成してください`,
     buildThemeSection(userInput),
     `【スライドタイプ】
@@ -262,9 +266,9 @@ function buildSingleSlidePrompt(
 用途: ${pattern.guidance}
 
 このスライドタイプに最適なレイアウトと内容で、1枚のスライドを作成してください。`,
-    buildStyleSection(style, layoutRules),
+    buildStyleSection(style, layoutRules, userInput.mode),
     buildConstraintsSection(layoutRules),
-    buildGeminiCanvasSection(),
+    buildGeminiCanvasSection(userInput.mode),
     `【実行指示】
 
 **今すぐ「${pattern.title}」タイプの1枚のスライドを作成してください。**
@@ -318,7 +322,9 @@ function buildStepByStepPrompts(
 
   // ステップ1: 骨子（アウトライン）生成のプロンプト
   const step1Parts = [
-    `あなたはプレゼンテーションスライド作成の専門家です。
+    `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【タスク】プレゼンテーションスライドの骨子（アウトライン）を作成してください。**
 
@@ -359,7 +365,9 @@ function buildStepByStepPrompts(
     const groupSlides = outline.slice(startIdx, endIdx);
 
     const step2Parts = [
-      `あなたはプレゼンテーションスライド作成の専門家です。
+      `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【最重要】スライド${startIdx + 1}〜${endIdx}を今すぐ作成してください。**
 
@@ -372,16 +380,18 @@ function buildStepByStepPrompts(
 【重要な制約】
 - HTML/CSS/JavaScriptコードは一切書かないでください
 - ナビゲーション要素は含めないでください
+- **絵文字は使用しないでください**（エクスポート時に変形する問題があるため）
+- **各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）${userInput.mode === 't3' ? '\n- **本文テキストに青色を使用せず、必ずデフォルトテキスト色（グレー系）を使用してください**' : ''}
 - Googleスライドにエクスポート可能な形式で作成してください`,
       buildThemeSection(userInput),
-      buildStyleSection(style, layoutRules),
+      buildStyleSection(style, layoutRules, userInput.mode),
       `【対象スライド】
 ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 
 【骨子（参照用）】
 先ほど作成した骨子をもとに、詳細なスライドコンテンツを作成してください。`,
       buildConstraintsSection(layoutRules),
-      buildGeminiCanvasSection(),
+      buildGeminiCanvasSection(userInput.mode),
       `【出力形式】
 各スライドを以下の形式で出力してください：
 
@@ -420,8 +430,12 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 /**
  * 役割定義セクション
  */
-function buildRoleSection(slideCount: number): string {
-  return `あなたはプレゼンテーションスライド作成の専門家です。
+function buildRoleSection(slideCount: number, mode?: string): string {
+  const blueColorWarning = mode === 't3' ? '\n- **本文テキストに青色を使用せず、必ずデフォルトテキスト色（グレー系）を使用してください**' : '';
+
+  return `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【最重要】${slideCount}枚のプレゼンテーションスライドを今すぐ作成してください。**
 
@@ -435,6 +449,8 @@ function buildRoleSection(slideCount: number): string {
 - HTML/CSS/JavaScriptコードは一切書かないでください
 - ナビゲーション要素（次へ/前へボタン、ページ送り）は含めないでください
 - インタラクティブな要素（ボタン、フォーム）は使用しないでください
+- **絵文字は使用しないでください**（エクスポート時に変形する問題があるため）
+- **各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）${blueColorWarning}
 - 各スライドは独立したページとして作成してください
 - Googleスライドにエクスポート可能な形式で作成してください`;
 }
@@ -463,7 +479,7 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
 /**
  * スタイル規定セクション
  */
-function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules']): string {
+function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules'], mode?: string): string {
   const sizes = style.sizes as any;
   const colors = style.colors as any;
 
@@ -487,9 +503,10 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
   // カラーセクション
   let colorSection = `- カラースキーム: ${style.name}
   - **デフォルトテキスト色: ${style.colors.text}（通常の白背景上のテキスト）**
+  - **タイトル色: ${colors.titleColor || '#000000'}（タイトルスライドおよびページタイトルは黒色、濃い背景の場合は白色）**
   - **白色テキスト: #FFFFFF（濃い背景上のテキスト用）**
   - 背景: ${style.colors.background}
-  - メインカラー: ${style.colors.primary}（タイトルや装飾に使用）
+  - メインカラー: ${style.colors.primary}（装飾に使用、タイトルには使用しない）
   - サブカラー: ${style.colors.secondary}（アクセントに使用）`;
 
   if (colors.pointRed) {
@@ -499,12 +516,16 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
     colorSection += `\n  - セクション区切り（背景）: ${colors.sectionDividerGray}（章タイトルの背景色）`;
   }
 
+  const blueColorRules = mode === 't3'
+    ? `\n  - **青色（${style.colors.primary}）は装飾のみに使用し、タイトルや本文には絶対に使用しないでください**
+  - **本文テキストに青色を使わないでください。必ずデフォルトテキスト色（${style.colors.text}）を使用してください**`
+    : '';
+
   colorSection += `\n\n【色使用の原則】
-  - 通常スライド（白背景）の本文: 必ず「デフォルトテキスト色（${style.colors.text}）」を使用
+  - **【最重要】タイトルスライドおよびページタイトル: 必ず黒色（${colors.titleColor || '#000000'}）を使用してください（濃い背景の場合のみ白色）**
+  - **【最重要】通常スライド（白背景）の本文: 必ず「デフォルトテキスト色（${style.colors.text}）」を使用してください**
   - 濃い背景（セクション区切りなど）の上のテキスト: 必ず「白色（#FFFFFF）」を使用
-  - タイトル: メインカラーまたはデフォルトテキスト色（背景が白の場合）
-  - 強調箇所のみ: ポイント（赤）を使用
-  - 青色（${style.colors.primary}）は装飾やタイトルにのみ使用し、本文には使用しない
+  - 強調箇所のみ: ポイント（赤）を使用${blueColorRules}
   - **背景色とテキスト色のコントラストを必ず確保する**（見本スライド参照）`;
 
   return `【スタイル規定】
@@ -515,6 +536,7 @@ ${colorSection}
 ${fontSizeSection}
 
 【レイアウト・配置ルール】
+- **【最重要】タイトルスライド: タイトルのみを左寄せ・縦方向中央揃えで配置。サブタイトル、ロゴ、担当者名などは含めない**
 - 余白: 上下${layoutRules.margins.top}/${layoutRules.margins.bottom}、左右${layoutRules.margins.left}/${layoutRules.margins.right}
 - テキスト配置: 基本は左揃え（表のタイトルや元資料で中央揃えのものは中央揃えに）
 - テキスト左上の開始位置を揃える（下に余白ができるのは可）
@@ -542,18 +564,25 @@ function buildStructureSection(outline: SlideOutline[]): string {
  */
 function buildConstraintsSection(layoutRules: PromptInput['layoutRules']): string {
   return `【制約事項】
+- **【重要】各スライドは必ず1ページに収めてください。ページをまたぐことは絶対に避けてください**
 - 1スライドあたりの文字数: ${layoutRules.textLimits.bodyPerSlide}文字以内
 - スライドタイトル: ${layoutRules.textLimits.slideTitle}文字以内
 - 専門用語を使う場合は必ず説明を添える
 - 視覚的に読みやすいレイアウトを心がける
 - 情報を詰め込みすぎず、1スライド1メッセージを原則とする
-- 箇条書きは簡潔に、各項目は${layoutRules.bulletPoints.characterLimit}文字以内`;
+- 箇条書きは簡潔に、各項目は${layoutRules.bulletPoints.characterLimit}文字以内
+- 内容が多い場合は、文字数を削減するか、次のスライドに分割してください`;
 }
 
 /**
  * Gemini Canvas → Googleスライド エクスポート対応セクション
  */
-function buildGeminiCanvasSection(): string {
+function buildGeminiCanvasSection(mode?: string): string {
+  const blueColorRules = mode === 't3'
+    ? `\n- 青色は装飾のみに使用し、タイトルや本文には絶対に使用しないでください
+- 本文は必ずデフォルトテキスト色（グレー系）を使用してください`
+    : '';
+
   return `【重要：Gemini Canvas → Googleスライドエクスポートの注意事項】
 
 ▼ スライドの作成方法（最重要）
@@ -561,14 +590,15 @@ function buildGeminiCanvasSection(): string {
 - **HTML、CSS、JavaScriptコードを書かないでください**
 - **ナビゲーション要素（次へ/前へボタン、ページ送り、インデックスなど）は含めないでください**
 - **インタラクティブな要素（ボタン、フォーム、アニメーションなど）は使用しないでください**
+- **絵文字は使用しないでください**（エクスポート時に変形する問題があるため）
 - 各スライドは独立したページとして作成してください
+- **各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）
 - Googleスライドにエクスポート可能なシンプルなレイアウトを使用してください
 
 ▼ テキスト色について（重要）
-- **白背景のスライドでは「デフォルトテキスト色」を使用**してください
-- **濃い背景（セクション区切りなど）では白色（#FFFFFF）を使用**してください
-- 青色をデフォルトテキストに使用しないでください
-- 青色は装飾やタイトルにのみ使用し、本文には使用しないでください
+- **【最重要】タイトルスライドおよびページタイトル: 必ず黒色（#000000）を使用してください（濃い背景の場合のみ白色）**
+- **【最重要】白背景のスライドの本文では「デフォルトテキスト色」を使用してください**${mode === 't3' ? '\n- **【最重要】本文テキストに青色を絶対に使用しないでください**' : ''}
+- **濃い背景（セクション区切りなど）では白色（#FFFFFF）を使用**してください${blueColorRules}
 - 背景色に応じて適切なテキスト色を選択し、十分なコントラストを確保してください
 
 ▼ フォントサイズについて
@@ -578,6 +608,7 @@ function buildGeminiCanvasSection(): string {
 - 指定された数値を厳密に守ってください
 
 ▼ レイアウトの原則
+- **【最重要】タイトルスライド: タイトルのみを左寄せ・縦方向中央揃えで配置。サブタイトル、ロゴ、担当者名などは含めない**
 - シンプルなレイアウトを使用（複雑な図形配置は避ける）
 - アニメーション効果は使用しない
 - 画像を使う場合は説明テキストも必ず添える
@@ -585,6 +616,7 @@ function buildGeminiCanvasSection(): string {
 - 表が複数ページにわたる場合、位置を揃える
 
 ▼ テキスト配置の徹底
+- **【最重要】タイトルスライド: タイトルのみを左寄せ・縦方向中央揃えで配置**
 - 文字は左揃えで統一（中央揃えは表のタイトルなど特定の場合のみ）
 - テキストの左上開始位置を各スライドで揃える
 - 下側に余白ができるのは問題なし
