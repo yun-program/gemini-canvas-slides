@@ -241,7 +241,9 @@ function buildSingleSlidePrompt(
   }
 
   const promptParts = [
-    `あなたはプレゼンテーションスライド作成の専門家です。
+    `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【最重要】1枚のプレゼンテーションスライドを今すぐ作成してください。**
 
@@ -318,7 +320,9 @@ function buildStepByStepPrompts(
 
   // ステップ1: 骨子（アウトライン）生成のプロンプト
   const step1Parts = [
-    `あなたはプレゼンテーションスライド作成の専門家です。
+    `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【タスク】プレゼンテーションスライドの骨子（アウトライン）を作成してください。**
 
@@ -359,7 +363,9 @@ function buildStepByStepPrompts(
     const groupSlides = outline.slice(startIdx, endIdx);
 
     const step2Parts = [
-      `あなたはプレゼンテーションスライド作成の専門家です。
+      `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【最重要】スライド${startIdx + 1}〜${endIdx}を今すぐ作成してください。**
 
@@ -421,7 +427,9 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
  * 役割定義セクション
  */
 function buildRoleSection(slideCount: number): string {
-  return `あなたはプレゼンテーションスライド作成の専門家です。
+  return `スライドを作成してください。
+
+あなたはプレゼンテーションスライド作成の専門家です。
 
 **【最重要】${slideCount}枚のプレゼンテーションスライドを今すぐ作成してください。**
 
