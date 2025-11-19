@@ -78,6 +78,8 @@ export interface UserInput {
   details: string;
   targetAudience?: string;
   additionalNotes?: string;
+  slideCount?: number; // カスタムスライド枚数
+  useStepByStep?: boolean; // 段階的生成モードを使用するか
 }
 
 // 骨子（アウトライン）の型
@@ -105,5 +107,16 @@ export interface GeneratedPrompt {
     templateId: string;
     styleId: string;
     generatedAt: string;
+    recommendedSlideCount?: number; // 推奨スライド枚数
+    isStepByStep?: boolean; // 段階的生成モードか
   };
+  stepByStepPrompts?: string[]; // 段階的生成の場合の各段階のプロンプト
+}
+
+// スライド枚数の推奨情報
+export interface SlideCountRecommendation {
+  recommended: number;
+  reason: string;
+  minSuggested: number;
+  maxSuggested: number;
 }

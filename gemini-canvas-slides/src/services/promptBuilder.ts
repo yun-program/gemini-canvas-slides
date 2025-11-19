@@ -1,4 +1,68 @@
-import type { PromptInput, GeneratedPrompt, SlideOutline } from '../types';
+import type { PromptInput, GeneratedPrompt, SlideOutline, SlideCountRecommendation } from '../types';
+
+/**
+ * 情報量からスライド枚数を推奨
+ */
+export function recommendSlideCount(userInput: { theme: string; details: string; additionalNotes?: string }): SlideCountRecommendation {
+  const { details, additionalNotes } = userInput;
+
+  // 文字数をカウント
+  const totalChars = (details || '').length + (additionalNotes || '').length;
+
+  // 箇条書き項目の数をカウント（簡易的に「-」「•」「*」「1.」などで始まる行）
+  const detailsLines = (details || '').split('\n');
+  const bulletPoints = detailsLines.filter(line =>
+    /^\s*[-•*]\s/.test(line) || /^\s*\d+\.\s/.test(line)
+  ).length;
+
+  // セクション見出しの数をカウント（**で囲まれたテキストや##で始まる行）
+  const sections = detailsLines.filter(line =>
+    /^\s*##/.test(line) || /\*\*.+\*\*/.test(line)
+  ).length;
+
+  let recommended = 5; // デフォルト
+  let reason = '';
+
+  // 文字数ベースの推奨
+  if (totalChars < 500) {
+    recommended = 3;
+    reason = '情報量が少ないため、3枚で十分です';
+  } else if (totalChars < 1500) {
+    recommended = 5;
+    reason = '標準的な情報量のため、5枚が適切です';
+  } else if (totalChars < 3000) {
+    recommended = 8;
+    reason = '情報量が多いため、8枚を推奨します';
+  } else if (totalChars < 5000) {
+    recommended = 10;
+    reason = '情報量がかなり多いため、10枚を推奨します';
+  } else {
+    recommended = 12;
+    reason = '情報量が非常に多いため、12枚以上または段階的生成を推奨します';
+  }
+
+  // セクション数による調整
+  if (sections > 0 && sections > recommended - 2) {
+    recommended = Math.max(recommended, sections + 2); // セクション数+タイトル・まとめ
+    reason = `${sections}個のセクションがあるため、${recommended}枚を推奨します`;
+  }
+
+  // 箇条書き項目数による調整
+  if (bulletPoints > 15) {
+    const estimatedFromBullets = Math.ceil(bulletPoints / 3) + 2; // 1スライド3項目+タイトル・まとめ
+    if (estimatedFromBullets > recommended) {
+      recommended = estimatedFromBullets;
+      reason = `${bulletPoints}個の箇条書き項目があるため、${recommended}枚を推奨します`;
+    }
+  }
+
+  return {
+    recommended,
+    reason,
+    minSuggested: Math.max(3, recommended - 2),
+    maxSuggested: recommended + 3,
+  };
+}
 
 /**
  * テンプレートから骨子を生成
@@ -11,13 +75,56 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
     return customSlides;
   }
 
-  // テンプレートから基本的な骨子を生成
-  return template.structure.map((slide, index) => ({
-    slideNumber: index + 1,
-    title: slide.title,
-    keyPoints: [slide.guidance],
-    notes: `テーマ: ${userInput.theme}\n${userInput.details ? `詳細: ${userInput.details}` : ''}`
-  }));
+  // スライド枚数の決定（ユーザー指定 > 推奨 > デフォルト）
+  const slideCount = userInput.slideCount ||
+                     recommendSlideCount(userInput).recommended ||
+                     template.defaultSlideCount;
+
+  // スライド枚数に応じて骨子を調整
+  if (slideCount === template.structure.length) {
+    // テンプレート通り
+    return template.structure.map((slide, index) => ({
+      slideNumber: index + 1,
+      title: slide.title,
+      keyPoints: [slide.guidance],
+      notes: `テーマ: ${userInput.theme}\n${userInput.details ? `詳細: ${userInput.details}` : ''}`
+    }));
+  } else if (slideCount < template.structure.length) {
+    // スライド枚数を減らす場合は重要なものだけ選択
+    const selectedSlides = template.structure.slice(0, slideCount);
+    return selectedSlides.map((slide, index) => ({
+      slideNumber: index + 1,
+      title: slide.title,
+      keyPoints: [slide.guidance],
+      notes: `テーマ: ${userInput.theme}\n${userInput.details ? `詳細: ${userInput.details}` : ''}`
+    }));
+  } else {
+    // スライド枚数を増やす場合は、テンプレートを拡張
+    const baseSlides = template.structure.map((slide, index) => ({
+      slideNumber: index + 1,
+      title: slide.title,
+      keyPoints: [slide.guidance],
+      notes: `テーマ: ${userInput.theme}\n${userInput.details ? `詳細: ${userInput.details}` : ''}`
+    }));
+
+    // 追加スライドを生成（主にコンテンツスライド）
+    const additionalCount = slideCount - template.structure.length;
+    for (let i = 0; i < additionalCount; i++) {
+      const slideNum = template.structure.length + i;
+      baseSlides.splice(slideNum, 0, {
+        slideNumber: slideNum + 1,
+        title: `詳細 ${i + 1}`,
+        keyPoints: ['詳細な内容を展開'],
+        notes: `テーマ: ${userInput.theme}\n${userInput.details ? `詳細: ${userInput.details}` : ''}`
+      });
+    }
+
+    // スライド番号を再割り当て
+    return baseSlides.map((slide, index) => ({
+      ...slide,
+      slideNumber: index + 1
+    }));
+  }
 }
 
 /**
@@ -26,15 +133,24 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
 export function buildPrompt(input: PromptInput): GeneratedPrompt {
   const { template, style, layoutRules, userInput } = input;
   const outline = generateOutline(input);
+  const recommendation = recommendSlideCount(userInput);
 
+  // 段階的生成モードの場合
+  if (userInput.useStepByStep) {
+    return buildStepByStepPrompts(input, outline, style, layoutRules, recommendation);
+  }
+
+  // 通常モード（一括生成）
   // プロンプトの組み立て
   const promptParts = [
-    buildRoleSection(),
+    buildRoleSection(outline.length),
     buildThemeSection(userInput),
     buildStyleSection(style, layoutRules),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
     buildGeminiCanvasSection(),
+    buildOutputExampleSection(),
+    buildExecutionSection(outline.length),
   ];
 
   const prompt = promptParts.join('\n\n');
@@ -46,19 +162,124 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
       templateId: template.id,
       styleId: style.id,
       generatedAt: new Date().toISOString(),
+      recommendedSlideCount: recommendation.recommended,
+      isStepByStep: false,
     },
+  };
+}
+
+/**
+ * 段階的生成モード用のプロンプトを生成
+ */
+function buildStepByStepPrompts(
+  input: PromptInput,
+  outline: SlideOutline[],
+  style: PromptInput['style'],
+  layoutRules: PromptInput['layoutRules'],
+  recommendation: SlideCountRecommendation
+): GeneratedPrompt {
+  const { userInput } = input;
+  const stepByStepPrompts: string[] = [];
+
+  // ステップ1: 骨子（アウトライン）生成のプロンプト
+  const step1Parts = [
+    `あなたはプレゼンテーションスライド作成の専門家です。
+
+【タスク】
+以下のテーマについて、プレゼンテーションスライドの**骨子（アウトライン）のみ**を作成してください。
+実際のスライドコンテンツは作成せず、各スライドのタイトルと主要ポイントのみをリストアップしてください。`,
+    buildThemeSection(userInput),
+    `【出力形式】
+以下の形式で、${outline.length}枚分の骨子を出力してください：
+
+\`\`\`
+スライド 1: [タイトル]
+- [主要ポイント1]
+- [主要ポイント2]
+- [主要ポイント3]
+
+スライド 2: [タイトル]
+- [主要ポイント1]
+- [主要ポイント2]
+...
+\`\`\`
+
+【重要】
+- 各スライドのタイトルと主要ポイント（3-5項目）のみを記載
+- 実際のスライドコンテンツ（本文や図表）は作成しない
+- 全体で${outline.length}枚のスライド構成を提案`,
+  ];
+
+  stepByStepPrompts.push(step1Parts.join('\n\n'));
+
+  // ステップ2以降: 各スライドグループの詳細生成
+  // スライドを3-4枚ずつのグループに分割
+  const groupSize = 3;
+  const groups = Math.ceil(outline.length / groupSize);
+
+  for (let i = 0; i < groups; i++) {
+    const startIdx = i * groupSize;
+    const endIdx = Math.min(startIdx + groupSize, outline.length);
+    const groupSlides = outline.slice(startIdx, endIdx);
+
+    const step2Parts = [
+      `あなたはプレゼンテーションスライド作成の専門家です。
+
+【タスク】
+先ほど作成した骨子に基づき、スライド${startIdx + 1}〜${endIdx}の**詳細なスライドコンテンツ**を作成してください。`,
+      buildThemeSection(userInput),
+      buildStyleSection(style, layoutRules),
+      `【対象スライド】
+${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
+
+【骨子（参照用）】
+先ほど作成した骨子をもとに、詳細なスライドコンテンツを作成してください。`,
+      buildConstraintsSection(layoutRules),
+      buildGeminiCanvasSection(),
+      `【出力形式】
+各スライドを以下の形式で出力してください：
+
+\`\`\`
+---
+スライド ${startIdx + 1}/${outline.length}
+
+## [スライドタイトル]
+
+[本文内容：箇条書き、表、図解など]
+---
+\`\`\`
+
+【実行指示】
+スライド${startIdx + 1}〜${endIdx}の詳細なコンテンツを、上記のスタイル規定に従って作成してください。`,
+    ];
+
+    stepByStepPrompts.push(step2Parts.join('\n\n'));
+  }
+
+  // 最初のプロンプト（骨子生成）を主プロンプトとして返す
+  return {
+    prompt: stepByStepPrompts[0],
+    outline,
+    metadata: {
+      templateId: input.template.id,
+      styleId: input.style.id,
+      generatedAt: new Date().toISOString(),
+      recommendedSlideCount: recommendation.recommended,
+      isStepByStep: true,
+    },
+    stepByStepPrompts,
   };
 }
 
 /**
  * 役割定義セクション
  */
-function buildRoleSection(): string {
+function buildRoleSection(slideCount: number): string {
   return `あなたはプレゼンテーションスライド作成の専門家です。
-以下の指示に従って、Googleスライドにエクスポート可能な静的なスライドを作成してください。
+以下の指示に従って、**今すぐ**Googleスライドにエクスポート可能な静的なスライドコンテンツを${slideCount}枚作成してください。
 
 【重要】Gemini Canvasでの出力形式について：
-- 静的なスライドコンテンツとして出力してください
+- **静的なスライドコンテンツとして出力**してください
 - ナビゲーション要素（「次へ」「前へ」ボタンなど）は一切含めないでください
 - 動的なUI要素やインタラクティブ要素は使用しないでください
 - 各スライドは独立した静的なページとして作成してください`;
@@ -235,6 +456,51 @@ Googleスライドにエクスポート後、以下を確認してください�
 - フォントサイズが意図通りか
 - 表の位置がズレていないか
 - テキストの配置（左揃え）が保たれているか`;
+}
+
+/**
+ * 出力例セクション
+ */
+function buildOutputExampleSection(): string {
+  return `【出力形式の例】
+
+各スライドを以下のような形式で出力してください：
+
+\`\`\`
+---
+スライド 1/${'{スライド総数}'}
+
+# [スライドタイトル]
+
+[副題や発表者情報など]
+---
+
+---
+スライド 2/${'{スライド総数}'}
+
+## [スライドタイトル]
+
+- [箇条書き項目1]
+- [箇条書き項目2]
+- [箇条書き項目3]
+---
+\`\`\``;
+}
+
+/**
+ * 実行指示セクション
+ */
+function buildExecutionSection(slideCount: number): string {
+  return `【実行指示】
+
+**以上の指示に従って、今すぐ${slideCount}枚のスライドコンテンツを作成してください。**
+
+各スライドには以下を含めてください：
+1. スライド番号とタイトル
+2. 本文内容（箇条書き、表、図解など）
+3. （必要に応じて）スピーカーノート
+
+**重要**: スライドの「仕様説明」や「メタ情報」ではなく、実際のスライドコンテンツそのものを作成してください。`;
 }
 
 /**
