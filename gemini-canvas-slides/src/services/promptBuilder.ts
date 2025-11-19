@@ -29,12 +29,14 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 
   // プロンプトの組み立て
   const promptParts = [
-    buildRoleSection(),
+    buildRoleSection(outline.length),
     buildThemeSection(userInput),
     buildStyleSection(style, layoutRules),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
     buildGeminiCanvasSection(),
+    buildOutputExampleSection(),
+    buildExecutionSection(outline.length),
   ];
 
   const prompt = promptParts.join('\n\n');
@@ -53,12 +55,12 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 /**
  * 役割定義セクション
  */
-function buildRoleSection(): string {
+function buildRoleSection(slideCount: number): string {
   return `あなたはプレゼンテーションスライド作成の専門家です。
-以下の指示に従って、Googleスライドにエクスポート可能な静的なスライドを作成してください。
+以下の指示に従って、**今すぐ**Googleスライドにエクスポート可能な静的なスライドコンテンツを${slideCount}枚作成してください。
 
 【重要】Gemini Canvasでの出力形式について：
-- 静的なスライドコンテンツとして出力してください
+- **静的なスライドコンテンツとして出力**してください
 - ナビゲーション要素（「次へ」「前へ」ボタンなど）は一切含めないでください
 - 動的なUI要素やインタラクティブ要素は使用しないでください
 - 各スライドは独立した静的なページとして作成してください`;
@@ -235,6 +237,51 @@ Googleスライドにエクスポート後、以下を確認してください�
 - フォントサイズが意図通りか
 - 表の位置がズレていないか
 - テキストの配置（左揃え）が保たれているか`;
+}
+
+/**
+ * 出力例セクション
+ */
+function buildOutputExampleSection(): string {
+  return `【出力形式の例】
+
+各スライドを以下のような形式で出力してください：
+
+\`\`\`
+---
+スライド 1/${'{スライド総数}'}
+
+# [スライドタイトル]
+
+[副題や発表者情報など]
+---
+
+---
+スライド 2/${'{スライド総数}'}
+
+## [スライドタイトル]
+
+- [箇条書き項目1]
+- [箇条書き項目2]
+- [箇条書き項目3]
+---
+\`\`\``;
+}
+
+/**
+ * 実行指示セクション
+ */
+function buildExecutionSection(slideCount: number): string {
+  return `【実行指示】
+
+**以上の指示に従って、今すぐ${slideCount}枚のスライドコンテンツを作成してください。**
+
+各スライドには以下を含めてください：
+1. スライド番号とタイトル
+2. 本文内容（箇条書き、表、図解など）
+3. （必要に応じて）スピーカーノート
+
+**重要**: スライドの「仕様説明」や「メタ情報」ではなく、実際のスライドコンテンツそのものを作成してください。`;
 }
 
 /**
