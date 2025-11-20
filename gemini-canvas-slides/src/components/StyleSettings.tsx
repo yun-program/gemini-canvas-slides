@@ -49,6 +49,7 @@ export default function StyleSettings({
   // カスタムカラーを適用
   const handleCustomColorApply = () => {
     onAccentColorsChange({ main: customMainColor, sub: customSubColor });
+    setIsCustomMode(false); // 適用後、カスタムモードを解除
   };
 
   // プリセットを選択
@@ -92,46 +93,49 @@ export default function StyleSettings({
         </div>
       )}
 
-      <div>
-        <label htmlFor="style" className="block text-sm font-semibold text-gray-700 mb-2">
-          スタイル
-        </label>
-        <select
-          id="style"
-          value={selectedStyleId}
-          onChange={(e) => onStyleChange(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-        >
-          {styles.map((style) => (
-            <option key={style.id} value={style.id}>
-              {style.name} - {style.description}
-            </option>
-          ))}
-        </select>
-        {selectedStyleId && (
-          <div className="mt-3 p-3 bg-white rounded border border-gray-200">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-medium text-gray-700">カラー:</span>
-              <div className="flex gap-1">
-                {styles.find(s => s.id === selectedStyleId)?.colors && (
-                  <>
-                    <div
-                      className="w-6 h-6 rounded border border-gray-300"
-                      style={{ backgroundColor: styles.find(s => s.id === selectedStyleId)!.colors.primary }}
-                      title="Primary"
-                    />
-                    <div
-                      className="w-6 h-6 rounded border border-gray-300"
-                      style={{ backgroundColor: styles.find(s => s.id === selectedStyleId)!.colors.secondary }}
-                      title="Secondary"
-                    />
-                  </>
-                )}
+      {/* スタイル選択（汎用モードのみ表示） */}
+      {mode === 'general' && (
+        <div>
+          <label htmlFor="style" className="block text-sm font-semibold text-gray-700 mb-2">
+            スタイル
+          </label>
+          <select
+            id="style"
+            value={selectedStyleId}
+            onChange={(e) => onStyleChange(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
+            {styles.map((style) => (
+              <option key={style.id} value={style.id}>
+                {style.name} - {style.description}
+              </option>
+            ))}
+          </select>
+          {selectedStyleId && (
+            <div className="mt-3 p-3 bg-white rounded border border-gray-200">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-medium text-gray-700">カラー:</span>
+                <div className="flex gap-1">
+                  {styles.find(s => s.id === selectedStyleId)?.colors && (
+                    <>
+                      <div
+                        className="w-6 h-6 rounded border border-gray-300"
+                        style={{ backgroundColor: styles.find(s => s.id === selectedStyleId)!.colors.primary }}
+                        title="Primary"
+                      />
+                      <div
+                        className="w-6 h-6 rounded border border-gray-300"
+                        style={{ backgroundColor: styles.find(s => s.id === selectedStyleId)!.colors.secondary }}
+                        title="Secondary"
+                      />
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* アクセントカラー選択 */}
       <div>
@@ -243,7 +247,7 @@ export default function StyleSettings({
               <button
                 type="button"
                 onClick={handleCustomColorApply}
-                className="w-full py-2 px-4 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                className="w-full py-2 px-4 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 active:scale-95 transition-all shadow-sm hover:shadow"
               >
                 カスタムカラーを適用
               </button>
