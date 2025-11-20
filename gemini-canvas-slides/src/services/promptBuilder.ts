@@ -424,10 +424,10 @@ function buildRoleSection(slideCount: number, mode?: string): string {
  * テーマ・内容セクション
  */
 function buildThemeSection(userInput: { theme: string; details: string; targetAudience?: string; additionalNotes?: string }): string {
-  let section = `「${userInput.theme}」について、スライドを作成してください。`;
+  let section = `【テーマ】\n${userInput.theme}`;
 
   if (userInput.details) {
-    section += `\n\n詳細情報:\n${userInput.details}`;
+    section += `\n\n【詳細情報】\n${userInput.details}`;
   }
 
   if (userInput.targetAudience) {
@@ -435,7 +435,7 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
   }
 
   if (userInput.additionalNotes) {
-    section += `\n\n補足事項:\n${userInput.additionalNotes}`;
+    section += `\n\n【補足事項】\n${userInput.additionalNotes}`;
   }
 
   return section;
@@ -549,7 +549,13 @@ function buildGeminiCanvasSection(mode?: string): string {
     : '';
 
   const titleDecorationRules = mode === 't3'
-    ? `\n- **【ティースリーモード限定】ページタイトル行に装飾（冒頭の縦線、横のバー、枠線など）を入れないでください**`
+    ? `\n- **【ティースリーモード限定】ページタイトル行に対して、線や図形で装飾を入れないでください。具体的には以下を禁止:**
+  - **図形機能を使った装飾（縦線、横線、矩形、図形要素など）**
+  - **タイトル文字の左側に配置される縦線（テキスト記号: | ┃ ▌ や、図形で描画される線）**
+  - **タイトルを囲む枠線やボーダー（テキストまたは図形）**
+  - **タイトルの上下に配置される横線やバー（テキストまたは図形）**
+  - **タイトル前後の記号装飾（●、■、◆など）**
+  - **タイトル行は純粋なテキストのみで構成してください**`
     : '';
 
   return `【重要：Gemini Canvas → Googleスライドエクスポートの注意事項】
