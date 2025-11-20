@@ -735,10 +735,9 @@ function buildStepByStepPrompts(
   recommendation: SlideCountRecommendation
 ): GeneratedPrompt {
   const { userInput } = input;
-  const stepByStepPrompts: string[] = [];
 
   // ステップ1: 骨子（アウトライン）生成のプロンプト
-  const step1Parts = [
+  const outlinePromptParts = [
     `スライドの骨子を作成して。
 
 ---
@@ -788,20 +787,11 @@ function buildStepByStepPrompts(
 * 設計書の説明`,
   ];
 
-  stepByStepPrompts.push(step1Parts.join('\n\n'));
+  const outlinePrompt = outlinePromptParts.join('\n\n');
 
-  // ステップ2以降: 各スライドグループの詳細生成
-  // スライドを3-4枚ずつのグループに分割
-  const groupSize = 3;
-  const groups = Math.ceil(outline.length / groupSize);
-
-  for (let i = 0; i < groups; i++) {
-    const startIdx = i * groupSize;
-    const endIdx = Math.min(startIdx + groupSize, outline.length);
-    const groupSlides = outline.slice(startIdx, endIdx);
-
-    const step2Parts = [
-      `スライドを作成して。
+  // ステップ2: スライド生成プロンプト（骨子貼り付け用プレースホルダー付き）
+  const detailPromptParts = [
+    `スライドを作成して。
 
 ---
 
@@ -810,12 +800,10 @@ function buildStepByStepPrompts(
 あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
 
 ---`,
-      buildThemeSection(userInput),
-      `## 【対象スライド】
+    buildThemeSection(userInput),
+    `## 【必要なスライド枚数】
 
-${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
-
-**先ほど作成した骨子をもとに、詳細なスライドコンテンツを作成してください。**
+**${outline.length}枚**
 
 ---
 
@@ -828,36 +816,33 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-      buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
-      buildConstraintsSection(layoutRules),
-      buildGeminiCanvasSection(userInput.mode),
-      `## 【出力形式】
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
+    `## 【スライド構成】
 
-各スライドは次の形式で出力：
+以下の骨子に基づいて、詳細なスライドを作成してください。
 
-1. スライド番号とタイトル
-2. 本文（箇条書き・表など）
-3. 必要に応じてスピーカーノート
+=====================
+【ここに生成された骨子を貼り付けてください】
 
----
+例：
+スライド 1: タイトルスライド
+- 主要ポイント1
+- 主要ポイント2
+...
+=====================
 
-## 【禁止事項】
+---`,
+    buildConstraintsSection(layoutRules),
+    buildGeminiCanvasSection(userInput.mode),
+    buildOutputExampleSection(),
+    buildExecutionSection(outline.length),
+  ];
 
-* 説明文・前置き
-* HTML／CSSコードの出力
-* 設計書の説明
+  const detailPrompt = detailPromptParts.join('\n\n');
 
----
-
-**スライド${startIdx + 1}〜${endIdx}の詳細なコンテンツを、上記のスタイル規定に従って作成してください。**`,
-    ];
-
-    stepByStepPrompts.push(step2Parts.join('\n\n'));
-  }
-
-  // 最初のプロンプト（骨子生成）を主プロンプトとして返す
+  // 骨子生成プロンプトを主プロンプトとして返す
   return {
-    prompt: stepByStepPrompts[0],
+    prompt: outlinePrompt,
     outline,
     metadata: {
       templateId: input.template.id,
@@ -866,7 +851,10 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
       recommendedSlideCount: recommendation.recommended,
       isStepByStep: true,
     },
-    stepByStepPrompts,
+    stepByStepPrompts: {
+      outlinePrompt,
+      detailPrompt,
+    },
   };
 }
 

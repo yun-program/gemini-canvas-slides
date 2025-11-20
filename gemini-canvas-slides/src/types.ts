@@ -136,7 +136,10 @@ export interface GeneratedPrompt {
     recommendedSlideCount?: number; // 推奨スライド枚数
     isStepByStep?: boolean; // 段階的生成モードか
   };
-  stepByStepPrompts?: string[]; // 段階的生成の場合の各段階のプロンプト
+  stepByStepPrompts?: {
+    outlinePrompt: string; // 骨子生成プロンプト
+    detailPrompt: string;  // スライド生成プロンプト（骨子貼り付け用プレースホルダー付き）
+  };
 }
 
 // スライド枚数の推奨情報
