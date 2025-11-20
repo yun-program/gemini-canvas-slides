@@ -286,12 +286,13 @@ function buildCustomPatternsSection(customPatterns: SlidePattern[], template: Te
   // 各スライドのパターンをリストアップ
   const slideList = customPatterns.map(cp => {
     const pattern = patternMap[cp.patternType];
-    return `* ${cp.slideNumber}枚目：**${pattern.number}. ${pattern.title}**`;
+    const contentNote = cp.contentGuidance ? `\n  → 内容: ${cp.contentGuidance}` : '';
+    return `* ${cp.slideNumber}枚目：**${pattern.number}. ${pattern.title}**${contentNote}`;
   }).join('\n');
 
   return `## 【スライド構成（ユーザー指定）】
 
-以下の順序で、指定されたパターンを使用してスライドを作成してください：
+以下の順序で、指定されたパターンと内容でスライドを作成してください：
 
 ${slideList}
 
@@ -303,9 +304,12 @@ ${slideList}
 
 ${customPatterns.map(cp => {
   const pattern = patternMap[cp.patternType];
-  return `### ${pattern.number}. **${pattern.title}**
+  const contentGuidance = cp.contentGuidance
+    ? `\n\n**【このスライドに含める内容】**\n${cp.contentGuidance}\n\n上記の内容を元資料から抽出・展開して、このパターンに沿ったスライドを作成してください。`
+    : '';
+  return `### スライド${cp.slideNumber}: ${pattern.number}. **${pattern.title}**
 
-${pattern.guidance}`;
+${pattern.guidance}${contentGuidance}`;
 }).join('\n\n')}
 
 ---`;

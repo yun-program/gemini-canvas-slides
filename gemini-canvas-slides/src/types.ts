@@ -90,6 +90,7 @@ export interface SlidePattern {
   slideNumber: number; // スライド番号（1から始まる）
   patternType: string; // パターンタイプ（例: "title-cover", "agenda"）
   patternTitle: string; // パターン名（例: "表紙（タイトルスライド）"）
+  contentGuidance?: string; // このスライドに書いてほしい内容の指定（オプション）
 }
 
 // ユーザー入力の型
