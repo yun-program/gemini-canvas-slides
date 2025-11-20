@@ -418,7 +418,11 @@ function buildRoleSection(slideCount: number, mode?: string): string {
  * テーマ・内容セクション
  */
 function buildThemeSection(userInput: { theme: string; details: string; targetAudience?: string; additionalNotes?: string }): string {
-  let section = `【テーマ・内容】\nテーマ: ${userInput.theme}`;
+  let section = `【テーマ・内容】\nテーマ: ${userInput.theme}
+
+【重要】スライドのタイトル（表紙）について:
+- テーマをそのまま使用せず、プレゼンテーションのタイトルにふさわしいテキストを生成してください
+- 簡潔で魅力的、かつ内容を的確に表すタイトルを作成してください`;
 
   if (userInput.details) {
     section += `\n\n詳細情報:\n${userInput.details}`;
