@@ -128,14 +128,29 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
           id="details"
           value={details}
           onChange={(e) => setDetails(e.target.value)}
-          placeholder="スライドに含めたい内容、伝えたいメッセージ、重要なポイントなどを記入してください。"
+          placeholder={
+            mode === 't3' && t3SubMode === 'single'
+              ? "【単体生成モード】テーマに関連する情報のみを入力してください。スライド1枚に収まる程度の情報量が適切です。"
+              : "スライドに含めたい内容、伝えたいメッセージ、重要なポイントなどを記入してください。"
+          }
           required
           rows={8}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
         />
-        <p className="mt-1 text-xs text-gray-500">
-          テキストで直接入力するか、下のファイルアップロードから情報を取り込むこともできます。
-        </p>
+        {mode === 't3' && t3SubMode === 'single' ? (
+          <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+            <p className="font-semibold">⚠️ 単体生成モードの注意事項</p>
+            <ul className="mt-1 ml-4 list-disc space-y-1">
+              <li><strong>極力指定したテーマに関連する情報のみ</strong>を入力してください</li>
+              <li><strong>スライド1枚に収まる程度の情報量</strong>が適切です（目安: 200〜500文字程度）</li>
+              <li>テーマから外れる内容が含まれると、生成されるスライドの品質が低下します</li>
+            </ul>
+          </div>
+        ) : (
+          <p className="mt-1 text-xs text-gray-500">
+            テキストで直接入力するか、下のファイルアップロードから情報を取り込むこともできます。
+          </p>
+        )}
       </div>
 
       {/* ファイルアップロード */}
@@ -198,7 +213,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
             ))}
           </select>
           <p className="mt-2 text-xs text-gray-600">
-            14種類のデザインパターンから1つを選んで、1枚のスライドを生成します。
+            15種類のデザインパターンから1つを選んで、1枚のスライドを生成します。
           </p>
         </div>
       )}
