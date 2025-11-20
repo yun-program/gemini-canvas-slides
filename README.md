@@ -12,6 +12,8 @@
 
 Gemini用のスライド作成プロンプトを自動生成するツールです。
 
+🌐 **オンラインで使う**: [https://yun-program.github.io/claude-code-playground/](https://yun-program.github.io/claude-code-playground/)
+
 **ディレクトリ**: `gemini-canvas-slides/`
 
 **主な機能**:
