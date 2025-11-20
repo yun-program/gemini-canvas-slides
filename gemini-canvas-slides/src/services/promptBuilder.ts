@@ -424,10 +424,10 @@ function buildRoleSection(slideCount: number, mode?: string): string {
  * テーマ・内容セクション
  */
 function buildThemeSection(userInput: { theme: string; details: string; targetAudience?: string; additionalNotes?: string }): string {
-  let section = `「${userInput.theme}」について、スライドを作成してください。`;
+  let section = `【テーマ】\n${userInput.theme}`;
 
   if (userInput.details) {
-    section += `\n\n詳細情報:\n${userInput.details}`;
+    section += `\n\n【詳細情報】\n${userInput.details}`;
   }
 
   if (userInput.targetAudience) {
@@ -435,7 +435,7 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
   }
 
   if (userInput.additionalNotes) {
-    section += `\n\n補足事項:\n${userInput.additionalNotes}`;
+    section += `\n\n【補足事項】\n${userInput.additionalNotes}`;
   }
 
   return section;
