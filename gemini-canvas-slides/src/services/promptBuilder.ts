@@ -179,6 +179,11 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
 export function buildPrompt(input: PromptInput): GeneratedPrompt {
   const { template, style, layoutRules, userInput } = input;
 
+  // ティースリーモードのセット生成の場合（新形式）
+  if (userInput.mode === 't3' && userInput.t3SubMode === 'set') {
+    return buildT3SetGenerationPrompt(input, style, layoutRules);
+  }
+
   // ティースリーモードの単体生成の場合
   if (userInput.mode === 't3' && userInput.t3SubMode === 'single' && userInput.selectedPattern) {
     return buildSingleSlidePrompt(input, style, layoutRules, userInput.selectedPattern);
@@ -205,7 +210,31 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 
   // プロンプトの組み立て
   const promptParts = [
+    `スライドを作成して。
+
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---`,
     buildThemeSection(restructuredInput),
+    `## 【必要なスライド枚数】
+
+**${outline.length}枚**
+
+---
+
+## 【はみ出し防止ルール】
+
+* 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
+* 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
+* タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
+* フォントサイズは変えない
+* 長文の場合は要点のみ抽出して圧縮
+
+---`,
     buildStyleSection(style, layoutRules, userInput.mode),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
@@ -230,6 +259,232 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 }
 
 /**
+ * ティースリーモードのセット生成用プロンプトを生成（新形式）
+ */
+function buildT3SetGenerationPrompt(
+  input: PromptInput,
+  style: PromptInput['style'],
+  layoutRules: PromptInput['layoutRules']
+): GeneratedPrompt {
+  const { template, userInput } = input;
+  const slideCount = userInput.slideCount || template.defaultSlideCount;
+  const sizes = style.sizes as any;
+  const colors = style.colors as any;
+
+  // 全15パターンの説明
+  const allPatterns = `### 1. **表紙（タイトルスライド）**
+
+* タイトルだけを左寄せ・縦方向中央に１行で配置
+* サブタイトル・ロゴ・担当者名は入れない
+* **タイトル行は純粋なテキストのみ（図形などでの装飾禁止）**
+
+### 2. **アジェンダ（目次・流れ）**
+
+* タイトル：アジェンダ
+* 3〜6項目でプレゼン全体の流れ
+* **背景色：${colors.sectionDividerGray}（濃いグレー）**
+* **文字色：#FFFFFF（白）・太字**
+* **装飾は禁止（線・縦棒・枠線・帯すべて不可）**
+
+### 3. **章タイトル（セクション区切り）**
+
+* **スライド全体の背景を ${colors.sectionDividerGray} に設定（全画面背景）**
+* **タイトル文字は背景に直接載せる（図形・帯・ボックスを置かない）**
+* **タイトル装飾は禁止（線・縦棒・枠線・帯すべて不可）**
+* タイトル文字色は **#FFFFFF**
+* ページ番号非表示
+
+### 4. **見出し＋本文（解説）**
+
+* 見出し＋箇条書きや短い段落で構成
+
+### 5. **Before / After（比較）**
+
+* 左：Before（薄色）
+* 右：After（強色）
+
+### 6. **実績紹介（ケーススタディ）**
+
+* 写真（文章で指示）＋成果・結果の箇条書き
+
+### 7. **図解（アイコン＋説明）**
+
+* 3〜6ブロックで要点整理
+
+### 8. **Q&A（問いかけ）**
+
+* 大きな質問＋選択肢
+
+### 9. **投票・アンケート型**
+
+* 質問＋選択肢（チェックボックス風）
+
+### 10. **グラフ・数値インフォグラフィック**
+
+* 重要数値の強調（グラフは文章で指示）
+
+### 11. **ステップ説明（工程）**
+
+* 3〜5段階ステップで流れを説明
+
+### 12. **プログラム（表形式）**
+
+* 表は最大3列×5行以内
+
+### 13. **注意事項（ガイドライン）**
+
+* 注意ラベル＋箇条書き
+
+### 14. **連絡先（お問い合わせ）**
+
+* 会社名・担当・メール・URLなどをシンプルに記載
+
+### 15. **画像中心スライド**
+
+* 画像（文章で指示）＋短い説明`;
+
+  const promptParts = [
+    `スライドを作成して。
+
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---
+
+## 【テーマ】
+
+**${userInput.theme}**`,
+
+    userInput.targetAudience ? `## 【対象者】
+
+**${userInput.targetAudience}**` : '',
+
+    userInput.additionalNotes ? `## 【プレゼンの目的】
+
+**${userInput.additionalNotes}**` : '',
+
+    `## 【必要なスライド枚数】
+
+**${slideCount}枚**
+
+---`,
+
+    userInput.details ? `## 【元となる資料・レポート本文】
+
+以下のテキストを元にスライドを作成してください。
+
+=====================
+${userInput.details}
+=====================
+
+---` : '',
+
+    `## 【利用可能なスライドパターン（15種類）】
+
+${allPatterns}
+
+---
+
+## 【スライド構成ルール】
+
+* 1枚目：必ず「表紙」
+* 2枚目：可能なら「アジェンダ」
+* 最終スライド：**8「Q&A」 または 14「連絡先」**
+* 中間スライドは元資料の流れに沿い最適なパターンを選択
+
+---
+
+## 【はみ出し防止ルール】
+
+* 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
+* 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
+* タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
+* フォントサイズは変えない
+* 長文の場合は要点のみ抽出して圧縮
+
+---
+
+## 【スタイル規定】
+
+### ●背景色
+
+* 通常：**#FFFFFF**
+* 章タイトル・アジェンダ：**${colors.sectionDividerGray}**
+
+### ●テキスト色（3種のみ）
+
+1. タイトル：${colors.titleColor}（濃色背景では #FFFFFF）
+2. 本文：${colors.text}
+3. 強調：${colors.pointRed}
+
+### ●アクセントカラー（装飾のみ）
+
+* ${colors.primary}（青）
+* ${colors.secondary}（淡青）
+  ※本文・タイトルには使わない
+
+### ●フォントサイズ（px｜変更不可）
+
+* タイトル：${sizes.titleSlide}
+* 見出し：${sizes.heading}
+* 本文：${sizes.body}
+* 小本文：${sizes.bodySmall}
+* 注釈：${sizes.citation}
+
+---
+
+## 【レイアウト規定】
+
+* 基本は左揃え
+* 余白：上下${layoutRules.margins.top}／左右${layoutRules.margins.left}
+* テーブルは3列×5行以内
+* 複雑な図形禁止
+
+---
+
+## 【出力形式】
+
+各スライドは次の形式で出力：
+
+1. スライド番号とタイトル
+2. 本文（箇条書き・表など）
+3. 必要に応じてスピーカーノート
+
+---
+
+## 【禁止事項】
+
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明`
+  ];
+
+  const prompt = promptParts.filter(p => p.trim() !== '').join('\n\n');
+
+  // アウトラインは動的に生成されるため、プレースホルダーとして空配列を返す
+  const outline: SlideOutline[] = Array.from({ length: slideCount }, (_, i) => ({
+    slideNumber: i + 1,
+    title: i === 0 ? '表紙' : i === 1 ? 'アジェンダ' : i === slideCount - 1 ? 'まとめ' : `スライド ${i + 1}`,
+    keyPoints: ['AIが最適なパターンを選択'],
+    notes: ''
+  }));
+
+  return {
+    prompt,
+    outline,
+    metadata: {
+      templateId: template.id,
+      styleId: style.id,
+      generatedAt: new Date().toISOString(),
+      isStepByStep: false,
+    },
+  };
+}
+
+/**
  * ティースリーモードの単体生成用プロンプトを生成
  */
 function buildSingleSlidePrompt(
@@ -248,19 +503,55 @@ function buildSingleSlidePrompt(
   }
 
   const promptParts = [
-    buildThemeSection(userInput),
-    `【スライドタイプ】
-タイプ: ${pattern.title}
-用途: ${pattern.guidance}
+    `スライドを作成して。
 
-このスライドタイプに最適なレイアウトと内容で、${userInput.slideCount || 1}枚のスライドを作成してください。`,
-    `【重要】詳細情報の使用について：
-- 詳細情報からテーマ「${userInput.theme}」に沿った内容だけを選択して使用してください
-- ${userInput.slideCount || 1}枚のスライドに収まるよう、最も重要な情報のみを厳選してください`,
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---`,
+    buildThemeSection(userInput),
+    `## 【必要なスライド枚数】
+
+**${userInput.slideCount || 1}枚**
+
+---`,
+    `## 【スライドタイプ】
+
+**タイプ: ${pattern.title}**
+**用途: ${pattern.guidance}**
+
+このスライドタイプに最適なレイアウトと内容で、${userInput.slideCount || 1}枚のスライドを作成してください。
+
+---`,
+    `## 【はみ出し防止ルール】
+
+* 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
+* 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
+* タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
+* フォントサイズは変えない
+* 長文の場合は要点のみ抽出して圧縮
+
+---`,
     buildStyleSection(style, layoutRules, userInput.mode),
     buildConstraintsSection(layoutRules),
-    buildGeminiCanvasSection(userInput.mode),
-    buildExecutionSection(userInput.slideCount || 1),
+    `## 【出力形式】
+
+各スライドは次の形式で出力：
+
+1. スライド番号とタイトル
+2. 本文（箇条書き・表など）
+3. 必要に応じてスピーカーノート
+
+---
+
+## 【禁止事項】
+
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明`,
   ];
 
   const prompt = promptParts.join('\n\n');
@@ -301,8 +592,24 @@ function buildStepByStepPrompts(
 
   // ステップ1: 骨子（アウトライン）生成のプロンプト
   const step1Parts = [
+    `スライドの骨子を作成して。
+
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---`,
     buildThemeSection(userInput),
-    `【出力形式】
+    `## 【必要なスライド枚数】
+
+**${outline.length}枚**
+
+---
+
+## 【出力形式】
+
 以下の形式で、${outline.length}枚分の骨子を出力してください：
 
 \`\`\`
@@ -317,10 +624,21 @@ function buildStepByStepPrompts(
 ...
 \`\`\`
 
-【重要】
+---
+
+## 【重要】
+
 - 各スライドのタイトルと主要ポイント（3-5項目）のみを記載
 - 実際のスライドコンテンツ（本文や図表）は作成しない
-- 全体で${outline.length}枚のスライド構成を提案`,
+- 全体で${outline.length}枚のスライド構成を提案
+
+---
+
+## 【禁止事項】
+
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明`,
   ];
 
   stepByStepPrompts.push(step1Parts.join('\n\n'));
@@ -336,30 +654,55 @@ function buildStepByStepPrompts(
     const groupSlides = outline.slice(startIdx, endIdx);
 
     const step2Parts = [
+      `スライドを作成して。
+
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---`,
       buildThemeSection(userInput),
-      buildStyleSection(style, layoutRules, userInput.mode),
-      `【対象スライド】
+      `## 【対象スライド】
+
 ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 
-【骨子（参照用）】
-先ほど作成した骨子をもとに、詳細なスライドコンテンツを作成してください。`,
+**先ほど作成した骨子をもとに、詳細なスライドコンテンツを作成してください。**
+
+---
+
+## 【はみ出し防止ルール】
+
+* 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
+* 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
+* タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
+* フォントサイズは変えない
+* 長文の場合は要点のみ抽出して圧縮
+
+---`,
+      buildStyleSection(style, layoutRules, userInput.mode),
       buildConstraintsSection(layoutRules),
       buildGeminiCanvasSection(userInput.mode),
-      `【出力形式】
-各スライドを以下の形式で出力してください：
+      `## 【出力形式】
 
-\`\`\`
+各スライドは次の形式で出力：
+
+1. スライド番号とタイトル
+2. 本文（箇条書き・表など）
+3. 必要に応じてスピーカーノート
+
 ---
-スライド ${startIdx + 1}/${outline.length}
 
-## [スライドタイトル]
+## 【禁止事項】
 
-[本文内容：箇条書き、表、図解など]
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明
+
 ---
-\`\`\`
 
-【実行指示】
-スライド${startIdx + 1}〜${endIdx}の詳細なコンテンツを、上記のスタイル規定に従って作成してください。`,
+**スライド${startIdx + 1}〜${endIdx}の詳細なコンテンツを、上記のスタイル規定に従って作成してください。**`,
     ];
 
     stepByStepPrompts.push(step2Parts.join('\n\n'));
@@ -567,24 +910,28 @@ function buildOutputExampleSection(): string {
 }
 
 /**
- * 実行指示セクション
+ * 実行指示セクション（汎用）
  */
 function buildExecutionSection(slideCount: number): string {
-  return `【実行指示】
+  return `## 【出力形式】
 
-**今すぐ${slideCount}枚のスライドを作成してください。**
+各スライドは次の形式で出力：
 
-❌ 禁止事項：
-- 説明や前置き（「このようなスライドを作成します」など）
-- HTMLコードやCSSコード
-- スライドの仕様や設計書
+1. スライド番号とタイトル
+2. 本文（箇条書き・表など）
+3. 必要に応じてスピーカーノート
 
-✅ 実施事項：
-- スライドの内容を直接出力する
-- スライド番号、タイトル、本文を含める
-- 上記の規定を厳守する
+---
 
-**説明なしで、今すぐスライドそのものを出力してください。**`;
+## 【禁止事項】
+
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明
+
+---
+
+**今すぐ${slideCount}枚のスライドを作成してください。**`;
 }
 
 /**
