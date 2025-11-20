@@ -161,6 +161,34 @@ function App() {
           </div>
         </header>
 
+        {/* 注意事項バナー */}
+        <div className="mb-8 max-w-4xl mx-auto">
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 shadow-md">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-yellow-900 mb-2">⚠️ 注意事項</h3>
+                <ul className="space-y-2 text-sm text-yellow-800">
+                  <li className="flex items-start gap-2">
+                    <span className="text-yellow-600 font-bold">•</span>
+                    <span>本ソフトは作者の<strong>学習目的</strong>で作成したものであり、<strong>動作保証・サポート等は一切行っておりません</strong>。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-yellow-600 font-bold">•</span>
+                    <span><strong>ご利用はすべて自己責任</strong>でお願いいたします。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-yellow-600 font-bold">•</span>
+                    <span>作者の都合により、<strong>予告なく公開を停止</strong>したり、<strong>機能を変更</strong>する場合があります。</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* モード選択タブ */}
         <div className="mb-8">
           <div className="flex justify-center space-x-2 bg-white rounded-lg shadow p-2 max-w-md mx-auto">
