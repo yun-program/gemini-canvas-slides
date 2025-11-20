@@ -114,8 +114,8 @@ export default function CustomStyleModal({
                   <li><strong>Google Fonts</strong>を推奨：Noto Sans JP, Roboto, Open Sans等</li>
                   <li><strong>システムフォント</strong>：Arial, Helvetica, Yu Gothic, Meiryo等</li>
                   <li><strong>複数指定</strong>：カンマ区切りで優先順位順に記載（例: Noto Sans JP, Arial）</li>
-                  <li><strong>代替フォント</strong>：メインフォントが利用できない場合のフォールバック</li>
-                  <li><strong>最後はジェネリック</strong>：sans-serif, serif等で終わらせる</li>
+                  <li><strong>代替フォント</strong>：メインフォントが使えない環境用の予備フォント</li>
+                  <li><strong>最後は必須</strong>：代替フォントの最後は sans-serif もしくは serif などのジェネリックフォントで終わらせる</li>
                 </ul>
               </div>
               <div className="space-y-3">
@@ -134,7 +134,7 @@ export default function CustomStyleModal({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    代替フォント（フォールバック）
+                    代替フォント
                   </label>
                   <input
                     type="text"
@@ -143,7 +143,7 @@ export default function CustomStyleModal({
                     placeholder="例: Yu Gothic, Meiryo, sans-serif"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
-                  <p className="mt-1 text-xs text-gray-500">メインフォントが使えない場合に使用</p>
+                  <p className="mt-1 text-xs text-gray-500">メインフォントが使えない環境用の予備フォント（最後は sans-serif か serif で終わらせる）</p>
                 </div>
               </div>
             </div>
