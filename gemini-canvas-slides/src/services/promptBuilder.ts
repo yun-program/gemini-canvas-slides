@@ -247,13 +247,18 @@ function buildSingleSlidePrompt(
 タイプ: ${pattern.title}
 用途: ${pattern.guidance}
 
-このスライドタイプに最適なレイアウトと内容で、1枚のスライドを作成してください。`,
+このスライドタイプに最適なレイアウトと内容で、${userInput.slideCount || 1}枚のスライドを作成してください。`,
+    `【重要】詳細情報の使用について：
+- 上記の詳細情報には、テーマ「${userInput.theme}」から外れる内容も含まれている可能性があります
+- **必ずテーマ「${userInput.theme}」に沿った内容だけを選択して使用してください**
+- テーマと関連性が低い情報は使用しないでください
+- ${userInput.slideCount || 1}枚のスライドに収まるよう、最も重要な情報のみを厳選してください`,
     buildStyleSection(style, layoutRules, userInput.mode),
     buildConstraintsSection(layoutRules),
     buildGeminiCanvasSection(userInput.mode),
     `【実行指示】
 
-**今すぐ「${pattern.title}」タイプの1枚のスライドを作成してください。**
+**今すぐ「${pattern.title}」タイプの${userInput.slideCount || 1}枚のスライドを作成してください。**
 
 ❌ やってはいけないこと：
 - 「このようなスライドを作成します」などの説明
@@ -269,13 +274,14 @@ function buildSingleSlidePrompt(
 
   const prompt = promptParts.join('\n\n');
 
-  // 単体生成用のアウトライン
-  const outline: SlideOutline[] = [{
-    slideNumber: 1,
-    title: pattern.title,
+  // 単体生成用のアウトライン（指定枚数分生成）
+  const slideCount = userInput.slideCount || 1;
+  const outline: SlideOutline[] = Array.from({ length: slideCount }, (_, i) => ({
+    slideNumber: i + 1,
+    title: slideCount === 1 ? pattern.title : `${pattern.title} ${i + 1}`,
     keyPoints: [pattern.guidance],
     notes: `テーマ: ${userInput.theme}\n${userInput.details}`
-  }];
+  }));
 
   return {
     prompt,
@@ -418,7 +424,11 @@ function buildRoleSection(slideCount: number, mode?: string): string {
  * テーマ・内容セクション
  */
 function buildThemeSection(userInput: { theme: string; details: string; targetAudience?: string; additionalNotes?: string }): string {
-  let section = `【テーマ・内容】\nテーマ: ${userInput.theme}`;
+  let section = `【テーマ・内容】\nテーマ: ${userInput.theme}
+
+【重要】スライドのタイトル（表紙）について:
+- テーマをそのまま使用せず、プレゼンテーションのタイトルにふさわしいテキストを生成してください
+- 簡潔で魅力的、かつ内容を的確に表すタイトルを作成してください`;
 
   if (userInput.details) {
     section += `\n\n詳細情報:\n${userInput.details}`;
