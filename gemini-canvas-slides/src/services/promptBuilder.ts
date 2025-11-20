@@ -205,7 +205,6 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 
   // プロンプトの組み立て
   const promptParts = [
-    'スライドを作成してください。',
     buildThemeSection(restructuredInput),
     buildStyleSection(style, layoutRules, userInput.mode),
     buildStructureSection(outline),
@@ -249,7 +248,6 @@ function buildSingleSlidePrompt(
   }
 
   const promptParts = [
-    'スライドを作成してください。',
     buildThemeSection(userInput),
     `【スライドタイプ】
 タイプ: ${pattern.title}
@@ -323,7 +321,6 @@ function buildStepByStepPrompts(
 
   // ステップ1: 骨子（アウトライン）生成のプロンプト
   const step1Parts = [
-    'スライドを作成してください。',
     buildThemeSection(userInput),
     `【出力形式】
 以下の形式で、${outline.length}枚分の骨子を出力してください：
@@ -359,7 +356,6 @@ function buildStepByStepPrompts(
     const groupSlides = outline.slice(startIdx, endIdx);
 
     const step2Parts = [
-      'スライドを作成してください。',
       buildThemeSection(userInput),
       buildStyleSection(style, layoutRules, userInput.mode),
       `【対象スライド】
@@ -440,7 +436,7 @@ function buildRoleSection(slideCount: number, mode?: string): string {
  * テーマ・内容セクション
  */
 function buildThemeSection(userInput: { theme: string; details: string; targetAudience?: string; additionalNotes?: string }): string {
-  let section = `【テーマ】\n${userInput.theme}`;
+  let section = `「${userInput.theme}」について、スライドを作成してください。`;
 
   if (userInput.details) {
     section += `\n\n【詳細情報】\n${userInput.details}`;
