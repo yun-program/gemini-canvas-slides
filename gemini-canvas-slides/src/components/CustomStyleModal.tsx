@@ -107,50 +107,73 @@ export default function CustomStyleModal({
 
             {/* フォント設定 */}
             <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold text-gray-800 mb-3">フォント設定</h3>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">フォント設定</h3>
+              <div className="mb-3 p-3 bg-blue-50 rounded-lg text-xs text-gray-700">
+                <p className="font-semibold mb-1">💡 フォントの指定方法</p>
+                <ul className="space-y-1 ml-4 list-disc">
+                  <li><strong>Google Fonts</strong>を推奨：Noto Sans JP, Roboto, Open Sans等</li>
+                  <li><strong>システムフォント</strong>：Arial, Helvetica, Yu Gothic, Meiryo等</li>
+                  <li><strong>複数指定</strong>：カンマ区切りで優先順位順に記載（例: Noto Sans JP, Arial）</li>
+                  <li><strong>代替フォント</strong>：メインフォントが利用できない場合のフォールバック</li>
+                  <li><strong>最後はジェネリック</strong>：sans-serif, serif等で終わらせる</li>
+                </ul>
+              </div>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    フォントファミリー
+                    フォントファミリー（メイン）
                   </label>
                   <input
                     type="text"
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    placeholder="例: Noto Sans JP"
+                    placeholder="例: Noto Sans JP, Roboto"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
+                  <p className="mt-1 text-xs text-gray-500">メインで使用するフォント（複数可、カンマ区切り）</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    代替フォント
+                    代替フォント（フォールバック）
                   </label>
                   <input
                     type="text"
                     value={fontFallback}
                     onChange={(e) => setFontFallback(e.target.value)}
-                    placeholder="例: Yu Gothic, sans-serif"
+                    placeholder="例: Yu Gothic, Meiryo, sans-serif"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
+                  <p className="mt-1 text-xs text-gray-500">メインフォントが使えない場合に使用</p>
                 </div>
               </div>
             </div>
 
             {/* カラー設定 */}
             <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold text-gray-800 mb-3">カラー設定</h3>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">カラー設定</h3>
+              <div className="mb-3 p-3 bg-green-50 rounded-lg text-xs text-gray-700">
+                <p className="font-semibold mb-1">🎨 各カラーの役割</p>
+                <ul className="space-y-1 ml-4 list-disc">
+                  <li><strong>Primary</strong>：メインカラー（装飾・アクセント用、タイトルには不使用）</li>
+                  <li><strong>Secondary</strong>：サブカラー（Primaryの補助、アクセント用）</li>
+                  <li><strong>Text</strong>：本文の文字色（通常の白背景上のテキスト）</li>
+                  <li><strong>Text Light</strong>：補足テキスト色（注釈・キャプション等）</li>
+                  <li><strong>Background</strong>：背景色（通常は白#FFFFFFを推奨）</li>
+                  <li><strong>Accent</strong>：薄い背景色（強調エリア等に使用）</li>
+                </ul>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: 'Primary', value: primary, setter: setPrimary },
-                  { label: 'Secondary', value: secondary, setter: setSecondary },
-                  { label: 'Text', value: text, setter: setText },
-                  { label: 'Text Light', value: textLight, setter: setTextLight },
-                  { label: 'Background', value: background, setter: setBackground },
-                  { label: 'Accent', value: accent, setter: setAccent },
-                ].map(({ label, value, setter }) => (
+                  { label: 'Primary', value: primary, setter: setPrimary, desc: 'メインカラー' },
+                  { label: 'Secondary', value: secondary, setter: setSecondary, desc: 'サブカラー' },
+                  { label: 'Text', value: text, setter: setText, desc: '本文' },
+                  { label: 'Text Light', value: textLight, setter: setTextLight, desc: '補足' },
+                  { label: 'Background', value: background, setter: setBackground, desc: '背景' },
+                  { label: 'Accent', value: accent, setter: setAccent, desc: '薄い背景' },
+                ].map(({ label, value, setter, desc }) => (
                   <div key={label}>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {label}
+                      {label} <span className="text-gray-500 font-normal">({desc})</span>
                     </label>
                     <div className="flex items-center gap-2">
                       <input
@@ -158,16 +181,33 @@ export default function CustomStyleModal({
                         value={value}
                         onChange={(e) => setter(e.target.value)}
                         className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
+                        title={desc}
                       />
                       <input
                         type="text"
                         value={value}
                         onChange={(e) => setter(e.target.value)}
+                        placeholder="#000000"
                         className="flex-1 px-2 py-2 border border-gray-300 rounded font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* フォントサイズ（固定）の説明 */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">フォントサイズ</h3>
+              <div className="p-3 bg-gray-100 rounded-lg text-xs text-gray-700">
+                <p className="font-semibold mb-1">📏 フォントサイズは固定されています</p>
+                <ul className="space-y-1 ml-4 list-disc">
+                  <li><strong>大見出し（タイトルスライド）</strong>：40pt</li>
+                  <li><strong>スライドタイトル</strong>：32pt</li>
+                  <li><strong>本文</strong>：24pt</li>
+                  <li><strong>引用・注釈</strong>：18pt</li>
+                </ul>
+                <p className="mt-2 text-gray-600">※ はみ出し防止のため、サイズ変更はできません</p>
               </div>
             </div>
 
