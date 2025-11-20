@@ -109,7 +109,7 @@ export interface UserInput {
   customSlidePatterns?: SlidePattern[]; // ティースリーモードのセット生成時のカスタムスライドパターン
 }
 
-// 骨子（アウトライン）の型
+// 構成（アウトライン）の型
 export interface SlideOutline {
   slideNumber: number;
   title: string;
@@ -138,8 +138,8 @@ export interface GeneratedPrompt {
     isStepByStep?: boolean; // 段階的生成モードか
   };
   stepByStepPrompts?: {
-    outlinePrompt: string; // 骨子生成プロンプト
-    detailPrompt: string;  // スライド生成プロンプト（骨子貼り付け用プレースホルダー付き）
+    outlinePrompt: string; // 構成生成プロンプト
+    detailPrompt: string;  // スライド生成プロンプト（構成貼り付け用プレースホルダー付き）
   };
 }
 

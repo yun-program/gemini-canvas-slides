@@ -111,7 +111,7 @@ function restructureContentBySlideCount(
 }
 
 /**
- * テンプレートから骨子を生成
+ * テンプレートから構成を生成
  */
 export function generateOutline(input: PromptInput): SlideOutline[] {
   const { template, userInput, customSlides } = input;
@@ -126,7 +126,7 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
                      recommendSlideCount(userInput).recommended ||
                      template.defaultSlideCount;
 
-  // スライド枚数に応じて骨子を調整
+  // スライド枚数に応じて構成を調整
   if (slideCount === template.structure.length) {
     // テンプレート通り
     return template.structure.map((slide, index) => ({
@@ -852,7 +852,7 @@ function buildStepByStepPrompts(
 
   const detailPrompt = detailPromptParts.join('\n\n');
 
-  // 骨子生成プロンプトを主プロンプトとして返す
+  // 構成生成プロンプトを主プロンプトとして返す
   return {
     prompt: outlinePrompt,
     outline,
@@ -1095,11 +1095,11 @@ export function formatPromptForCopy(prompt: string): string {
 }
 
 /**
- * 骨子をMarkdown形式で出力
+ * 構成をMarkdown形式で出力
  */
 export function formatOutlineAsMarkdown(outline: SlideOutline[]): string {
   const lines = [
-    '# スライド骨子',
+    '# スライド構成',
     '',
     ...outline.map((slide) => {
       const keyPoints = slide.keyPoints.length > 0

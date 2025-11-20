@@ -17,11 +17,11 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
     ? [result.stepByStepPrompts!.outlinePrompt, result.stepByStepPrompts!.detailPrompt]
     : [result.prompt];
 
-  // 骨子が入力されている場合は、プレースホルダーを置き換え
+  // 構成が入力されている場合は、プレースホルダーを置き換え
   let currentPrompt = prompts[currentStep];
   if (isStepByStep && currentStep === 1 && pastedOutline.trim()) {
     // プレースホルダー部分を検出して置き換え
-    const placeholderPattern = /={5,}\n【ここに生成された骨子を貼り付けてください】[\s\S]*?={5,}/;
+    const placeholderPattern = /={5,}\n【ここに生成された構成を貼り付けてください】[\s\S]*?={5,}/;
     currentPrompt = currentPrompt.replace(placeholderPattern, `=====================\n${pastedOutline.trim()}\n=====================`);
   }
 
@@ -61,7 +61,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
               )}
               {isStepByStep && (
                 <p className="text-amber-700">
-                  🔄 段階的生成モード: 骨子確認後にスライド生成
+                  🔄 段階的生成モード: 構成確認後にスライド生成
                 </p>
               )}
             </div>
@@ -69,7 +69,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
         </div>
       </div>
 
-      {/* 骨子セクション */}
+      {/* 構成セクション */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -77,7 +77,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              スライド骨子
+              スライド構成
             </h3>
             <button
               onClick={() => setShowOutline(!showOutline)}
@@ -113,7 +113,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
               onClick={handleCopyOutline}
               className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              骨子をMarkdown形式でコピー
+              構成をMarkdown形式でコピー
             </button>
           </div>
         )}
@@ -150,7 +150,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  📝 骨子生成プロンプト
+                  📝 構成生成プロンプト
                 </button>
                 <button
                   onClick={() => setCurrentStep(1)}
@@ -167,34 +167,34 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
                 <p className="text-sm text-amber-800">
                   {currentStep === 0 ? (
                     <>
-                      <strong>📝 骨子生成プロンプト：</strong> このプロンプトでスライドの骨子（各スライドのタイトルと主要ポイント）を生成します。
-                      生成された骨子を確認・編集してから、次のステップに進んでください。
+                      <strong>📝 構成生成プロンプト：</strong> このプロンプトでスライドの構成（各スライドのタイトルと主要ポイント）を生成します。
+                      生成された構成を確認・編集してから、次のステップに進んでください。
                     </>
                   ) : (
                     <>
-                      <strong>✏️ スライド生成プロンプト：</strong> 下のテキストエリアにGeminiで生成された骨子を貼り付けてください。
+                      <strong>✏️ スライド生成プロンプト：</strong> 下のテキストエリアにGeminiで生成された構成を貼り付けてください。
                       自動的にプロンプトに組み込まれます。全スライドを一括生成することでデザインが統一されます。
                     </>
                   )}
                 </p>
               </div>
 
-              {/* 骨子入力エリア（スライド生成プロンプトタブの場合） */}
+              {/* 構成入力エリア（スライド生成プロンプトタブの場合） */}
               {currentStep === 1 && (
                 <div className="mt-3">
                   <label htmlFor="outline-input" className="block text-sm font-semibold text-gray-800 mb-2">
-                    生成された骨子を貼り付け
+                    生成された構成を貼り付け
                   </label>
                   <textarea
                     id="outline-input"
                     value={pastedOutline}
                     onChange={(e) => setPastedOutline(e.target.value)}
-                    placeholder="Geminiで生成された骨子をここに貼り付けてください&#10;&#10;例：&#10;スライド 1: タイトルスライド&#10;- 主要ポイント1&#10;- 主要ポイント2&#10;&#10;スライド 2: 概要&#10;- ポイント1&#10;- ポイント2"
+                    placeholder="Geminiで生成された構成をここに貼り付けてください&#10;&#10;例：&#10;スライド 1: タイトルスライド&#10;- 主要ポイント1&#10;- 主要ポイント2&#10;&#10;スライド 2: 概要&#10;- ポイント1&#10;- ポイント2"
                     className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm resize-vertical"
                   />
                   {pastedOutline.trim() && (
                     <p className="mt-2 text-xs text-green-600 font-medium">
-                      ✅ 骨子が入力されました。下のプロンプトに自動的に組み込まれています。
+                      ✅ 構成が入力されました。下のプロンプトに自動的に組み込まれています。
                     </p>
                   )}
                 </div>
@@ -228,10 +228,10 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
               {isStepByStep ? (
                 <>
-                  <li>「📝 骨子生成プロンプト」タブでプロンプトをコピーして Gemini で実行</li>
-                  <li>生成された骨子を確認・必要に応じて編集</li>
+                  <li>「📝 構成生成プロンプト」タブでプロンプトをコピーして Gemini で実行</li>
+                  <li>生成された構成を確認・必要に応じて編集</li>
                   <li>「✏️ スライド生成プロンプト」タブに切り替え</li>
-                  <li>生成された骨子を上のテキストエリアに貼り付け（自動的にプロンプトに組み込まれます）</li>
+                  <li>生成された構成を上のテキストエリアに貼り付け（自動的にプロンプトに組み込まれます）</li>
                   <li>完成したプロンプトをコピーして Gemini で実行（全スライド一括生成でデザイン統一！）</li>
                   <li>生成されたスライドをGoogleスライドにエクスポート</li>
                 </>

@@ -425,15 +425,15 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
                 段階的生成モードを使用
               </label>
               <p className="mt-1 text-xs text-gray-600">
-                情報量が多い場合におすすめ。最初に骨子を生成し、その後各スライドの詳細を段階的に作成します。
+                情報量が多い場合におすすめ。最初に構成を生成し、その後各スライドの詳細を段階的に作成します。
                 Geminiが混乱せず、高品質なスライドを生成できます。
               </p>
               {useStepByStep && (
                 <div className="mt-2 p-2 bg-amber-100 rounded text-xs text-amber-800">
                   <strong>📝 使い方:</strong>
                   <ol className="list-decimal ml-4 mt-1 space-y-1">
-                    <li>ステップ1のプロンプトで骨子を生成</li>
-                    <li>生成された骨子を確認</li>
+                    <li>ステップ1のプロンプトで構成を生成</li>
+                    <li>生成された構成を確認</li>
                     <li>ステップ2以降のプロンプトで各スライドの詳細を生成</li>
                   </ol>
                 </div>
