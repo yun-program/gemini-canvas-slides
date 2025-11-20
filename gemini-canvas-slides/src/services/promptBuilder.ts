@@ -1,4 +1,4 @@
-import type { PromptInput, GeneratedPrompt, SlideOutline, SlideCountRecommendation } from '../types';
+import type { PromptInput, GeneratedPrompt, SlideOutline, SlideCountRecommendation, SlidePattern, Template } from '../types';
 
 /**
  * 情報量からスライド枚数を推奨
@@ -179,21 +179,29 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
 export function buildPrompt(input: PromptInput): GeneratedPrompt {
   const { template, style, layoutRules, userInput } = input;
 
+  // subModeまたはt3SubModeを取得（後方互換性のため）
+  const subMode = userInput.subMode || userInput.t3SubMode;
+
   // ティースリーモードのセット生成の場合（新形式）
-  if (userInput.mode === 't3' && userInput.t3SubMode === 'set') {
+  if (userInput.mode === 't3' && subMode === 'set') {
     return buildT3SetGenerationPrompt(input, style, layoutRules);
   }
 
   // ティースリーモードの単体生成の場合
-  if (userInput.mode === 't3' && userInput.t3SubMode === 'single' && userInput.selectedPattern) {
+  if (userInput.mode === 't3' && subMode === 'single' && userInput.selectedPattern) {
     return buildSingleSlidePrompt(input, style, layoutRules, userInput.selectedPattern);
+  }
+
+  // 汎用モードの単体生成の場合
+  if (userInput.mode === 'general' && subMode === 'single') {
+    return buildGeneralSingleSlidePrompt(input, style, layoutRules);
   }
 
   const outline = generateOutline(input);
   const recommendation = recommendSlideCount(userInput);
 
-  // 段階的生成モードの場合（汎用モードのみ）
-  if (userInput.mode === 'general' && userInput.useStepByStep) {
+  // 段階的生成モードの場合（汎用モードのセット生成時のみ）
+  if (userInput.mode === 'general' && subMode === 'set' && userInput.useStepByStep) {
     return buildStepByStepPrompts(input, outline, style, layoutRules, recommendation);
   }
 
@@ -235,7 +243,7 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-    buildStyleSection(style, layoutRules, userInput.mode),
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
     buildGeminiCanvasSection(userInput.mode),
@@ -259,6 +267,133 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 }
 
 /**
+ * カスタムスライドパターンのセクションを生成
+ */
+function buildCustomPatternsSection(customPatterns: SlidePattern[], template: Template): string {
+  // テンプレートから全パターン情報を取得
+  const patternDetails = template.structure;
+
+  // パターン番号とタイトルのマッピング（全15種類）
+  const patternMap: { [key: string]: { number: number; title: string; guidance: string } } = {};
+  patternDetails.forEach((p, index) => {
+    patternMap[p.type] = {
+      number: index + 1,
+      title: p.title,
+      guidance: p.guidance
+    };
+  });
+
+  // 各スライドのパターンをリストアップ
+  const slideList = customPatterns.map(cp => {
+    const pattern = patternMap[cp.patternType];
+    return `* ${cp.slideNumber}枚目：**${pattern.number}. ${pattern.title}**`;
+  }).join('\n');
+
+  return `## 【スライド構成（ユーザー指定）】
+
+以下の順序で、指定されたパターンを使用してスライドを作成してください：
+
+${slideList}
+
+---
+
+## 【利用パターンの詳細】
+
+以下のパターンを使用します：
+
+${customPatterns.map(cp => {
+  const pattern = patternMap[cp.patternType];
+  return `### ${pattern.number}. **${pattern.title}**
+
+${pattern.guidance}`;
+}).join('\n\n')}
+
+---`;
+}
+
+/**
+ * 汎用モードの単体生成用プロンプトを生成
+ */
+function buildGeneralSingleSlidePrompt(
+  input: PromptInput,
+  style: PromptInput['style'],
+  layoutRules: PromptInput['layoutRules']
+): GeneratedPrompt {
+  const { template, userInput } = input;
+
+  const promptParts = [
+    `スライドを作成して。
+
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---`,
+    buildThemeSection(userInput),
+    `## 【必要なスライド枚数】
+
+**1枚**
+
+---
+
+## 【はみ出し防止ルール】
+
+* 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
+* 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
+* タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
+* フォントサイズは変えない
+* 長文の場合は要点のみ抽出して圧縮
+
+---`,
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
+    buildConstraintsSection(layoutRules),
+    buildGeminiCanvasSection(userInput.mode),
+    `## 【出力形式】
+
+各スライドは次の形式で出力：
+
+1. スライド番号とタイトル
+2. 本文（箇条書き・表など）
+3. 必要に応じてスピーカーノート
+
+---
+
+## 【禁止事項】
+
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明
+
+---
+
+**1枚のスライドを作成してください。**`,
+  ];
+
+  const prompt = promptParts.join('\n\n');
+
+  // 汎用モードの単体生成用のアウトライン
+  const outline: SlideOutline[] = [{
+    slideNumber: 1,
+    title: userInput.theme,
+    keyPoints: ['単体スライド'],
+    notes: `テーマ: ${userInput.theme}\n${userInput.details}`
+  }];
+
+  return {
+    prompt,
+    outline,
+    metadata: {
+      templateId: template.id,
+      styleId: style.id,
+      generatedAt: new Date().toISOString(),
+      isStepByStep: false,
+    },
+  };
+}
+
+/**
  * ティースリーモードのセット生成用プロンプトを生成（新形式）
  */
 function buildT3SetGenerationPrompt(
@@ -270,6 +405,15 @@ function buildT3SetGenerationPrompt(
   const slideCount = userInput.slideCount || template.defaultSlideCount;
   const sizes = style.sizes as any;
   const colors = style.colors as any;
+
+  // カスタムアクセントカラーが指定されている場合は上書き
+  if (userInput.customAccentColors) {
+    colors.primary = userInput.customAccentColors.main;
+    colors.secondary = userInput.customAccentColors.sub;
+  }
+
+  // カスタムスライドパターンが指定されている場合
+  const hasCustomPatterns = userInput.customSlidePatterns && userInput.customSlidePatterns.length > 0;
 
   // 全15パターンの説明
   const allPatterns = `### 1. **表紙（タイトルスライド）**
@@ -382,7 +526,10 @@ ${userInput.details}
 
 ---` : '',
 
-    `## 【利用可能なスライドパターン（15種類）】
+    // カスタムパターンが指定されている場合とそうでない場合で切り替え
+    hasCustomPatterns
+      ? buildCustomPatternsSection(userInput.customSlidePatterns!, template)
+      : `## 【利用可能なスライドパターン（15種類）】
 
 ${allPatterns}
 
@@ -395,9 +542,9 @@ ${allPatterns}
 * 最終スライド：**8「Q&A」 または 14「連絡先」**
 * 中間スライドは元資料の流れに沿い最適なパターンを選択
 
----
+---`,
 
-## 【はみ出し防止ルール】
+    `## 【はみ出し防止ルール】
 
 * 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
 * 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
@@ -535,7 +682,7 @@ function buildSingleSlidePrompt(
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-    buildStyleSection(style, layoutRules, userInput.mode),
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
     buildConstraintsSection(layoutRules),
     `## 【出力形式】
 
@@ -681,7 +828,7 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-      buildStyleSection(style, layoutRules, userInput.mode),
+      buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
       buildConstraintsSection(layoutRules),
       buildGeminiCanvasSection(userInput.mode),
       `## 【出力形式】
@@ -766,9 +913,15 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
 /**
  * スタイル規定セクション
  */
-function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules'], mode?: string): string {
+function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules'], mode?: string, customAccentColors?: { main: string; sub: string }): string {
   const sizes = style.sizes as any;
-  const colors = style.colors as any;
+  const colors = { ...style.colors } as any;
+
+  // カスタムアクセントカラーが指定されている場合は上書き
+  if (customAccentColors) {
+    colors.primary = customAccentColors.main;
+    colors.secondary = customAccentColors.sub;
+  }
 
   // フォントサイズセクション
   let fontSizeSection = `【フォントサイズ】（重要：必ずpxで指定してください）

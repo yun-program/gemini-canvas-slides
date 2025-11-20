@@ -74,7 +74,21 @@ export interface StyleConfig {
 
 // モード定義
 export type AppMode = 'general' | 't3'; // 汎用モード | ティースリーモード
-export type T3SubMode = 'set' | 'single'; // セット生成 | 単体生成
+export type SubMode = 'set' | 'single'; // セット生成 | 単体生成（両モード共通）
+export type T3SubMode = SubMode; // 後方互換性のため
+
+// アクセントカラー（装飾用）の設定
+export interface AccentColors {
+  main: string; // メインカラー（例: #2563EB）
+  sub: string;  // サブカラー（例: #60A5FA）
+}
+
+// スライドパターンの指定（セット生成時のカスタム構成用）
+export interface SlidePattern {
+  slideNumber: number; // スライド番号（1から始まる）
+  patternType: string; // パターンタイプ（例: "title-cover", "agenda"）
+  patternTitle: string; // パターン名（例: "表紙（タイトルスライド）"）
+}
 
 // ユーザー入力の型
 export interface UserInput {
@@ -83,10 +97,13 @@ export interface UserInput {
   targetAudience?: string;
   additionalNotes?: string;
   slideCount?: number; // カスタムスライド枚数
-  useStepByStep?: boolean; // 段階的生成モードを使用するか（汎用モードのみ）
+  useStepByStep?: boolean; // 段階的生成モードを使用するか（汎用モードのセット生成時のみ）
   mode?: AppMode; // 使用するモード
-  t3SubMode?: T3SubMode; // ティースリーモードのサブモード
-  selectedPattern?: string; // 単体生成時に選択されたパターン
+  subMode?: SubMode; // サブモード（セット生成 | 単体生成）両モード共通
+  t3SubMode?: T3SubMode; // 後方互換性のため（subModeと同じ）
+  selectedPattern?: string; // ティースリーモードの単体生成時に選択されたパターン
+  customAccentColors?: AccentColors; // カスタムアクセントカラー
+  customSlidePatterns?: SlidePattern[]; // ティースリーモードのセット生成時のカスタムスライドパターン
 }
 
 // 骨子（アウトライン）の型
