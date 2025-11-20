@@ -82,6 +82,13 @@ export interface AccentColors {
   sub: string;  // サブカラー（例: #60A5FA）
 }
 
+// スライドパターンの指定（セット生成時のカスタム構成用）
+export interface SlidePattern {
+  slideNumber: number; // スライド番号（1から始まる）
+  patternType: string; // パターンタイプ（例: "title-cover", "agenda"）
+  patternTitle: string; // パターン名（例: "表紙（タイトルスライド）"）
+}
+
 // ユーザー入力の型
 export interface UserInput {
   theme: string;
@@ -94,6 +101,7 @@ export interface UserInput {
   t3SubMode?: T3SubMode; // ティースリーモードのサブモード
   selectedPattern?: string; // 単体生成時に選択されたパターン
   customAccentColors?: AccentColors; // カスタムアクセントカラー
+  customSlidePatterns?: SlidePattern[]; // セット生成時のカスタムスライドパターン
 }
 
 // 骨子（アウトライン）の型

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import FileUploader from './FileUploader';
-import type { UserInput, AppMode, T3SubMode, Template } from '../types';
+import type { UserInput, AppMode, T3SubMode, Template, SlidePattern } from '../types';
 import { recommendSlideCount } from '../services/promptBuilder';
 
 interface InputFormProps {
@@ -20,6 +20,8 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
   const [slideCount, setSlideCount] = useState<number | undefined>(undefined);
   const [useStepByStep, setUseStepByStep] = useState(false);
   const [selectedPattern, setSelectedPattern] = useState('');
+  const [useCustomPatterns, setUseCustomPatterns] = useState(false); // カスタムパターン指定を使用するか
+  const [customSlidePatterns, setCustomSlidePatterns] = useState<SlidePattern[]>([]); // カスタムスライドパターン
 
   const [recommendation, setRecommendation] = useState<{
     recommended: number;
@@ -63,12 +65,72 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
     // 入力値が有効な数値の場合のみslideCountを更新
     if (value === '') {
       setSlideCount(undefined);
+      setCustomSlidePatterns([]);
     } else {
       const num = parseInt(value, 10);
       if (!isNaN(num) && num >= 3 && num <= 20) {
         setSlideCount(num);
+        // カスタムパターン使用時は、スライド枚数に応じてパターン配列を初期化
+        if (useCustomPatterns) {
+          initializeCustomPatterns(num);
+        }
       }
     }
+  };
+
+  // カスタムスライドパターンを初期化
+  const initializeCustomPatterns = (count: number) => {
+    const patterns: SlidePattern[] = [];
+    const availablePatterns = t3Patterns;
+
+    for (let i = 1; i <= count; i++) {
+      // 既存のパターンがあればそれを保持、なければデフォルトを設定
+      const existingPattern = customSlidePatterns.find(p => p.slideNumber === i);
+      if (existingPattern) {
+        patterns.push(existingPattern);
+      } else {
+        // デフォルトパターンを設定
+        let defaultPattern = availablePatterns[0];
+        if (i === 1) {
+          // 1枚目は表紙
+          defaultPattern = availablePatterns.find(p => p.type === 'title-cover') || availablePatterns[0];
+        } else if (i === 2) {
+          // 2枚目はアジェンダ
+          defaultPattern = availablePatterns.find(p => p.type === 'agenda') || availablePatterns[1];
+        } else if (i === count) {
+          // 最後はQ&Aまたは連絡先
+          defaultPattern = availablePatterns.find(p => p.type === 'qa-workshop' || p.type === 'contact-info') || availablePatterns[availablePatterns.length - 1];
+        }
+
+        patterns.push({
+          slideNumber: i,
+          patternType: defaultPattern.type,
+          patternTitle: defaultPattern.title,
+        });
+      }
+    }
+    setCustomSlidePatterns(patterns);
+  };
+
+  // カスタムパターンが有効化されたときに初期化
+  useEffect(() => {
+    if (useCustomPatterns && slideCount && customSlidePatterns.length === 0) {
+      initializeCustomPatterns(slideCount);
+    }
+  }, [useCustomPatterns, slideCount]);
+
+  // 個別のスライドパターンを変更
+  const handlePatternChange = (slideNumber: number, patternType: string) => {
+    const pattern = t3Patterns.find(p => p.type === patternType);
+    if (!pattern) return;
+
+    setCustomSlidePatterns(prev =>
+      prev.map(p =>
+        p.slideNumber === slideNumber
+          ? { ...p, patternType: pattern.type, patternTitle: pattern.title }
+          : p
+      )
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,6 +155,11 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
     if (mode === 't3' && t3SubMode === 'single' && selectedPattern) {
       input.selectedPattern = selectedPattern;
       input.slideCount = 1; // 単体生成は1枚のみ
+    }
+
+    // ティースリーモードのセット生成時：カスタムパターン指定
+    if (mode === 't3' && t3SubMode === 'set' && useCustomPatterns && customSlidePatterns.length > 0) {
+      input.customSlidePatterns = customSlidePatterns;
     }
 
     onSubmit(input);
@@ -251,6 +318,60 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
           <p className="mt-2 text-xs text-gray-500">
             情報量に応じて自動で推奨枚数が計算されます。推奨より少ない枚数を指定すると、内容が自動的に要約されます。
           </p>
+        </div>
+      )}
+
+      {/* ティースリーモードのセット生成：カスタムスライドパターン指定 */}
+      {mode === 't3' && t3SubMode === 'set' && (
+        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <div className="flex items-start gap-3 mb-3">
+            <input
+              type="checkbox"
+              id="useCustomPatterns"
+              checked={useCustomPatterns}
+              onChange={(e) => setUseCustomPatterns(e.target.checked)}
+              className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+            />
+            <div className="flex-1">
+              <label htmlFor="useCustomPatterns" className="block text-sm font-semibold text-gray-700">
+                スライドパターンを個別に指定する
+              </label>
+              <p className="mt-1 text-xs text-gray-600">
+                各スライドのパターン（表紙、アジェンダ、Before/Afterなど）を手動で選択できます。
+              </p>
+            </div>
+          </div>
+
+          {useCustomPatterns && slideCount && customSlidePatterns.length > 0 && (
+            <div className="mt-4 space-y-3 bg-white p-4 rounded-lg border border-purple-300">
+              <h4 className="text-sm font-semibold text-purple-800 mb-3">
+                各スライドのパターンを選択（全{slideCount}枚）
+              </h4>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {customSlidePatterns.map((pattern) => (
+                  <div key={pattern.slideNumber} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                    <span className="text-sm font-medium text-gray-700 w-16">
+                      {pattern.slideNumber}枚目:
+                    </span>
+                    <select
+                      value={pattern.patternType}
+                      onChange={(e) => handlePatternChange(pattern.slideNumber, e.target.value)}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      {t3Patterns.map((p, index) => (
+                        <option key={index} value={p.type}>
+                          {p.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-3">
+                💡 デフォルトで1枚目は表紙、2枚目はアジェンダ、最後はQ&A/連絡先に設定されています。
+              </p>
+            </div>
+          )}
         </div>
       )}
 

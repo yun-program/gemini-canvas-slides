@@ -1,4 +1,4 @@
-import type { PromptInput, GeneratedPrompt, SlideOutline, SlideCountRecommendation } from '../types';
+import type { PromptInput, GeneratedPrompt, SlideOutline, SlideCountRecommendation, SlidePattern, Template } from '../types';
 
 /**
  * 情報量からスライド枚数を推奨
@@ -259,6 +259,51 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 }
 
 /**
+ * カスタムスライドパターンのセクションを生成
+ */
+function buildCustomPatternsSection(customPatterns: SlidePattern[], template: Template): string {
+  // テンプレートから全パターン情報を取得
+  const patternDetails = template.structure;
+
+  // パターン番号とタイトルのマッピング（全15種類）
+  const patternMap: { [key: string]: { number: number; title: string; guidance: string } } = {};
+  patternDetails.forEach((p, index) => {
+    patternMap[p.type] = {
+      number: index + 1,
+      title: p.title,
+      guidance: p.guidance
+    };
+  });
+
+  // 各スライドのパターンをリストアップ
+  const slideList = customPatterns.map(cp => {
+    const pattern = patternMap[cp.patternType];
+    return `* ${cp.slideNumber}枚目：**${pattern.number}. ${pattern.title}**`;
+  }).join('\n');
+
+  return `## 【スライド構成（ユーザー指定）】
+
+以下の順序で、指定されたパターンを使用してスライドを作成してください：
+
+${slideList}
+
+---
+
+## 【利用パターンの詳細】
+
+以下のパターンを使用します：
+
+${customPatterns.map(cp => {
+  const pattern = patternMap[cp.patternType];
+  return `### ${pattern.number}. **${pattern.title}**
+
+${pattern.guidance}`;
+}).join('\n\n')}
+
+---`;
+}
+
+/**
  * ティースリーモードのセット生成用プロンプトを生成（新形式）
  */
 function buildT3SetGenerationPrompt(
@@ -276,6 +321,9 @@ function buildT3SetGenerationPrompt(
     colors.primary = userInput.customAccentColors.main;
     colors.secondary = userInput.customAccentColors.sub;
   }
+
+  // カスタムスライドパターンが指定されている場合
+  const hasCustomPatterns = userInput.customSlidePatterns && userInput.customSlidePatterns.length > 0;
 
   // 全15パターンの説明
   const allPatterns = `### 1. **表紙（タイトルスライド）**
@@ -388,7 +436,10 @@ ${userInput.details}
 
 ---` : '',
 
-    `## 【利用可能なスライドパターン（15種類）】
+    // カスタムパターンが指定されている場合とそうでない場合で切り替え
+    hasCustomPatterns
+      ? buildCustomPatternsSection(userInput.customSlidePatterns!, template)
+      : `## 【利用可能なスライドパターン（15種類）】
 
 ${allPatterns}
 
@@ -401,9 +452,9 @@ ${allPatterns}
 * 最終スライド：**8「Q&A」 または 14「連絡先」**
 * 中間スライドは元資料の流れに沿い最適なパターンを選択
 
----
+---`,
 
-## 【はみ出し防止ルール】
+    `## 【はみ出し防止ルール】
 
 * 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
 * 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
