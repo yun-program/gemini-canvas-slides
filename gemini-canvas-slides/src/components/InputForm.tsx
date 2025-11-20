@@ -90,7 +90,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
         patterns.push(existingPattern);
       } else {
         // デフォルトパターンを設定
-        let defaultPattern = availablePatterns[0];
+        let defaultPattern = availablePatterns.find(p => p.type === 'content-explanation') || availablePatterns[0];
         if (i === 1) {
           // 1枚目は表紙
           defaultPattern = availablePatterns.find(p => p.type === 'title-cover') || availablePatterns[0];
