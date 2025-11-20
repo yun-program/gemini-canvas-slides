@@ -736,9 +736,9 @@ function buildStepByStepPrompts(
 ): GeneratedPrompt {
   const { userInput } = input;
 
-  // ステップ1: 骨子（アウトライン）生成のプロンプト
+  // ステップ1: 構成（アウトライン）生成のプロンプト
   const outlinePromptParts = [
-    `スライドの骨子を作成して。
+    `構成を作成して。
 
 ---
 
@@ -756,7 +756,7 @@ function buildStepByStepPrompts(
 
 ## 【出力形式】
 
-以下の形式で、${outline.length}枚分の骨子を出力してください：
+以下の形式で、${outline.length}枚分の構成を出力してください：
 
 \`\`\`
 スライド 1: [タイトル]
@@ -775,7 +775,7 @@ function buildStepByStepPrompts(
 ## 【重要】
 
 - 各スライドのタイトルと主要ポイント（3-5項目）のみを記載
-- 実際のスライドコンテンツ（本文や図表）は作成しない
+- これは構成案です。実際のスライドコンテンツ（詳細な本文や図表）は次のステップで作成します
 - 全体で${outline.length}枚のスライド構成を提案
 
 ---
@@ -789,7 +789,7 @@ function buildStepByStepPrompts(
 
   const outlinePrompt = outlinePromptParts.join('\n\n');
 
-  // ステップ2: スライド生成プロンプト（骨子貼り付け用プレースホルダー付き）
+  // ステップ2: スライド生成プロンプト（構成貼り付け用プレースホルダー付き）
   const detailPromptParts = [
     `スライドを作成して。
 
@@ -799,11 +799,35 @@ function buildStepByStepPrompts(
 
 あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
 
+**【最重要】これは段階的生成モードのステップ2です。構成案ではなく、実際のスライドそのものをCanvas機能で作成してください。**
+
 ---`,
     buildThemeSection(userInput),
     `## 【必要なスライド枚数】
 
 **${outline.length}枚**
+
+---
+
+## 【スライド構成（確認済み）】
+
+以下の構成に基づいて、**詳細な内容を含む完成版のスライド**をCanvas機能で作成してください。
+
+=====================
+【ここに生成された構成を貼り付けてください】
+
+例：
+スライド 1: タイトルスライド
+- 主要ポイント1
+- 主要ポイント2
+
+スライド 2: ○○について
+- 主要ポイント1
+- 主要ポイント2
+...
+=====================
+
+**【重要】上記は構成案です。この構成に基づいて、詳細な本文・箇条書き・図表などを含む完成版のスライドを作成してください。構成をそのまま出力するのではなく、各ポイントを展開して詳細なスライドコンテンツにしてください。**
 
 ---
 
@@ -814,22 +838,6 @@ function buildStepByStepPrompts(
 * タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
 * フォントサイズは変えない
 * 長文の場合は要点のみ抽出して圧縮
-
----`,
-    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
-    `## 【スライド構成】
-
-以下の骨子に基づいて、詳細なスライドを作成してください。
-
-=====================
-【ここに生成された骨子を貼り付けてください】
-
-例：
-スライド 1: タイトルスライド
-- 主要ポイント1
-- 主要ポイント2
-...
-=====================
 
 ---`,
     buildConstraintsSection(layoutRules),
