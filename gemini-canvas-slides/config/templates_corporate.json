@@ -2,14 +2,19 @@
   "templates": [
     {
       "id": "corporate-training-full",
-      "name": "企業研修フルセット（14パターン）",
-      "description": "全14種類のデザインパターンを含む包括的な研修スライド",
-      "defaultSlideCount": 14,
+      "name": "企業研修フルセット（15パターン）",
+      "description": "全15種類のデザインパターンを含む包括的な研修スライド",
+      "defaultSlideCount": 15,
       "structure": [
         {
           "title": "表紙（タイトルスライド）",
           "type": "title-cover",
           "guidance": "研修名・イベント名を大きく左寄せ・縦方向中央揃えで配置。タイトルのみ表示。サブタイトル、ロゴ、担当者名は含めない。"
+        },
+        {
+          "title": "アジェンダ（目次・流れ）",
+          "type": "agenda",
+          "guidance": "プレゼンテーションの流れを箇条書きで提示。各項目は簡潔に（3-6項目程度）。目次・今日の流れ・タイムライン形式で使用。"
         },
         {
           "title": "章タイトル（セクション区切り）",
@@ -81,13 +86,18 @@
     {
       "id": "corporate-training-basic",
       "name": "企業研修ベーシック",
-      "description": "基本的な研修構成（8スライド）",
-      "defaultSlideCount": 8,
+      "description": "基本的な研修構成（9スライド）",
+      "defaultSlideCount": 9,
       "structure": [
         {
           "title": "表紙（タイトルスライド）",
           "type": "title-cover",
           "guidance": "研修名・イベント名を大きく左寄せ・縦方向中央揃えで配置。タイトルのみ表示。"
+        },
+        {
+          "title": "アジェンダ（目次）",
+          "type": "agenda",
+          "guidance": "プレゼンテーションの流れを箇条書きで提示。各項目は簡潔に。"
         },
         {
           "title": "章タイトル（導入）",
@@ -129,13 +139,18 @@
     {
       "id": "corporate-training-data",
       "name": "企業研修データ重視",
-      "description": "データ・統計を多用する研修（7スライド）",
-      "defaultSlideCount": 7,
+      "description": "データ・統計を多用する研修（8スライド）",
+      "defaultSlideCount": 8,
       "structure": [
         {
           "title": "表紙",
           "type": "title-cover",
           "guidance": "研修タイトルを大きく左寄せ・縦方向中央揃えで配置。タイトルのみ表示。"
+        },
+        {
+          "title": "アジェンダ（目次）",
+          "type": "agenda",
+          "guidance": "プレゼンテーションの流れを箇条書きで提示。各項目は簡潔に。"
         },
         {
           "title": "現状のデータ",
