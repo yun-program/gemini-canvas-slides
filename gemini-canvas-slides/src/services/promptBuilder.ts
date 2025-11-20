@@ -197,7 +197,7 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 
   // プロンプトの組み立て
   const promptParts = [
-    buildRoleSection(outline.length, userInput.mode),
+    'スライドを作成してください。',
     buildThemeSection(restructuredInput),
     buildStyleSection(style, layoutRules, userInput.mode),
     buildStructureSection(outline),
@@ -241,27 +241,7 @@ function buildSingleSlidePrompt(
   }
 
   const promptParts = [
-    `Canvas機能をつかってスライドを作成してください。
-
-あなたはプレゼンテーションスライド作成の専門家です。
-
-以下に示すテーマと詳細情報をもとに、1枚のプレゼンテーションスライドの内容を考えて、実際のスライドをCanvas機能で今すぐ作成してください。
-
-**【最重要】プロンプト文を出力するのではなく、実際のスライドそのものを1枚作成してください。**
-
-【絶対に守ること】
-❌ コードやドキュメントを書かないでください
-❌ スライドの作り方や仕様を説明しないでください
-❌ 「以下のようなスライドを作成します」などの前置きは不要です
-✅ 実際のスライドの内容そのものを、今すぐ出力してください
-
-【重要な制約】
-- HTML/CSS/JavaScriptコードは一切書かないでください
-- ナビゲーション要素（次へ/前へボタン）は含めないでください
-- インタラクティブな要素（ボタン、フォーム）は使用しないでください
-- **絵文字は使用しないでください**（エクスポート時に変形する問題があるため）
-- **スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）${userInput.mode === 't3' ? '\n- **本文テキストに青色を使用せず、必ずデフォルトテキスト色（グレー系）を使用してください**' : ''}
-- Googleスライドにエクスポート可能な形式で作成してください`,
+    'スライドを作成してください。',
     buildThemeSection(userInput),
     `【スライドタイプ】
 タイプ: ${pattern.title}
@@ -324,14 +304,7 @@ function buildStepByStepPrompts(
 
   // ステップ1: 骨子（アウトライン）生成のプロンプト
   const step1Parts = [
-    `Canvas機能をつかってスライドを作成してください。
-
-あなたはプレゼンテーションスライド作成の専門家です。
-
-**【タスク】プレゼンテーションスライドの骨子（アウトライン）を作成してください。**
-
-以下に示すテーマと詳細情報をもとに、スライドの**骨子（アウトライン）のみ**を作成してください。
-実際のスライドコンテンツは作成せず、各スライドのタイトルと主要ポイントのみをリストアップしてください。`,
+    'スライドを作成してください。',
     buildThemeSection(userInput),
     `【出力形式】
 以下の形式で、${outline.length}枚分の骨子を出力してください：
@@ -367,26 +340,7 @@ function buildStepByStepPrompts(
     const groupSlides = outline.slice(startIdx, endIdx);
 
     const step2Parts = [
-      `Canvas機能をつかってスライドを作成してください。
-
-あなたはプレゼンテーションスライド作成の専門家です。
-
-以下に示すテーマと詳細情報をもとに、スライド${startIdx + 1}〜${endIdx}の内容を考えて、実際のスライドをCanvas機能で今すぐ作成してください。
-
-**【最重要】プロンプト文を出力するのではなく、実際のスライドそのものをスライド${startIdx + 1}〜${endIdx}まで作成してください。**
-
-【絶対に守ること】
-❌ コードやドキュメントを書かないでください
-❌ スライドの作り方や仕様を説明しないでください
-❌ 「以下のようなスライドを作成します」などの前置きは不要です
-✅ 実際のスライドの内容そのものを、今すぐ出力してください
-
-【重要な制約】
-- HTML/CSS/JavaScriptコードは一切書かないでください
-- ナビゲーション要素は含めないでください
-- **絵文字は使用しないでください**（エクスポート時に変形する問題があるため）
-- **各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）${userInput.mode === 't3' ? '\n- **本文テキストに青色を使用せず、必ずデフォルトテキスト色（グレー系）を使用してください**' : ''}
-- Googleスライドにエクスポート可能な形式で作成してください`,
+      'スライドを作成してください。',
       buildThemeSection(userInput),
       buildStyleSection(style, layoutRules, userInput.mode),
       `【対象スライド】
