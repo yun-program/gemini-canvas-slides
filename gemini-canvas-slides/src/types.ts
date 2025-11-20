@@ -76,6 +76,12 @@ export interface StyleConfig {
 export type AppMode = 'general' | 't3'; // 汎用モード | ティースリーモード
 export type T3SubMode = 'set' | 'single'; // セット生成 | 単体生成
 
+// アクセントカラー（装飾用）の設定
+export interface AccentColors {
+  main: string; // メインカラー（例: #2563EB）
+  sub: string;  // サブカラー（例: #60A5FA）
+}
+
 // ユーザー入力の型
 export interface UserInput {
   theme: string;
@@ -87,6 +93,7 @@ export interface UserInput {
   mode?: AppMode; // 使用するモード
   t3SubMode?: T3SubMode; // ティースリーモードのサブモード
   selectedPattern?: string; // 単体生成時に選択されたパターン
+  customAccentColors?: AccentColors; // カスタムアクセントカラー
 }
 
 // 骨子（アウトライン）の型

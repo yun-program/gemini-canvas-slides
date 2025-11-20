@@ -235,7 +235,7 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-    buildStyleSection(style, layoutRules, userInput.mode),
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
     buildStructureSection(outline),
     buildConstraintsSection(layoutRules),
     buildGeminiCanvasSection(userInput.mode),
@@ -270,6 +270,12 @@ function buildT3SetGenerationPrompt(
   const slideCount = userInput.slideCount || template.defaultSlideCount;
   const sizes = style.sizes as any;
   const colors = style.colors as any;
+
+  // カスタムアクセントカラーが指定されている場合は上書き
+  if (userInput.customAccentColors) {
+    colors.primary = userInput.customAccentColors.main;
+    colors.secondary = userInput.customAccentColors.sub;
+  }
 
   // 全15パターンの説明
   const allPatterns = `### 1. **表紙（タイトルスライド）**
@@ -535,7 +541,7 @@ function buildSingleSlidePrompt(
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-    buildStyleSection(style, layoutRules, userInput.mode),
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
     buildConstraintsSection(layoutRules),
     `## 【出力形式】
 
@@ -681,7 +687,7 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-      buildStyleSection(style, layoutRules, userInput.mode),
+      buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
       buildConstraintsSection(layoutRules),
       buildGeminiCanvasSection(userInput.mode),
       `## 【出力形式】
@@ -766,9 +772,15 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
 /**
  * スタイル規定セクション
  */
-function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules'], mode?: string): string {
+function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules'], mode?: string, customAccentColors?: { main: string; sub: string }): string {
   const sizes = style.sizes as any;
-  const colors = style.colors as any;
+  const colors = { ...style.colors } as any;
+
+  // カスタムアクセントカラーが指定されている場合は上書き
+  if (customAccentColors) {
+    colors.primary = customAccentColors.main;
+    colors.secondary = customAccentColors.sub;
+  }
 
   // フォントサイズセクション
   let fontSizeSection = `【フォントサイズ】（重要：必ずpxで指定してください）

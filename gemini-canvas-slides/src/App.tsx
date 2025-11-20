@@ -3,7 +3,7 @@ import InputForm from './components/InputForm';
 import StyleSettings from './components/StyleSettings';
 import PromptDisplay from './components/PromptDisplay';
 import { buildPrompt } from './services/promptBuilder';
-import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, T3SubMode } from './types';
+import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, T3SubMode, AccentColors } from './types';
 
 // 設定ファイルのインポート
 import templatesData from '../config/templates.json';
@@ -15,6 +15,12 @@ function App() {
   // モード管理
   const [appMode, setAppMode] = useState<AppMode>('general');
   const [t3SubMode, setT3SubMode] = useState<T3SubMode>('set');
+
+  // アクセントカラーの管理（デフォルトは青系）
+  const [customAccentColors, setCustomAccentColors] = useState<AccentColors>({
+    main: '#2563EB',
+    sub: '#60A5FA',
+  });
 
   // 汎用モード用のテンプレート
   const generalTemplates = (templatesData as TemplateConfig).templates;
@@ -62,11 +68,12 @@ function App() {
     // 少し遅延を入れてローディングを表示
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // モード情報をuserInputに追加
+    // モード情報とアクセントカラーをuserInputに追加
     const inputWithMode = {
       ...userInput,
       mode: appMode,
       t3SubMode: appMode === 't3' ? t3SubMode : undefined,
+      customAccentColors,
     };
 
     const result = buildPrompt({
@@ -169,6 +176,9 @@ function App() {
               selectedStyleId={selectedStyleId}
               onTemplateChange={setSelectedTemplateId}
               onStyleChange={setSelectedStyleId}
+              mode={appMode}
+              customAccentColors={customAccentColors}
+              onAccentColorsChange={setCustomAccentColors}
             />
           </div>
 
