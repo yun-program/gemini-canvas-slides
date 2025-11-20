@@ -85,8 +85,10 @@ function restructureContentBySlideCount(
 【重要】情報量の調整について：
 - 上記の情報を${slideCount}枚のスライドに収める必要があります
 - 推奨枚数は${recommendedCount}枚ですが、${slideCount}枚に絞り込みます（約${reductionRatio}%削減）
-- 最も重要なポイントのみを選択し、詳細は省略してください
-- 各スライドは簡潔に、キーメッセージのみを含めてください`;
+- **最も重要なポイントのみを選択し、詳細は大幅に省略してください**
+- **各スライドは簡潔に、キーメッセージのみを含めてください**
+- **箇条書きは3-5項目程度に抑え、各項目は50文字以内にしてください**
+- **コンテンツがスライドからはみ出すことは絶対に避けてください**`;
   } else if (slideCount > recommendedCount) {
     const expansionRatio = Math.round((slideCount / recommendedCount - 1) * 100);
     return `${details}${additionalNotes ? `\n\n${additionalNotes}` : ''}
@@ -95,11 +97,17 @@ function restructureContentBySlideCount(
 - 上記の情報を${slideCount}枚のスライドに展開します
 - 推奨枚数は${recommendedCount}枚ですが、${slideCount}枚に拡張します（約${expansionRatio}%増量）
 - 各ポイントをより詳細に展開してください
-- 具体例や補足説明を追加してください`;
+- 具体例や補足説明を追加してください
+- **ただし、各スライドは1ページに収まるようにしてください。はみ出しは絶対に避けてください**`;
   }
 
-  // 推奨枚数と同じ場合はそのまま返す
-  return `${details}${additionalNotes ? `\n\n${additionalNotes}` : ''}`;
+  // 推奨枚数と同じ場合でも、はみ出し防止の注意を追加
+  return `${details}${additionalNotes ? `\n\n${additionalNotes}` : ''}
+
+【重要】コンテンツのはみ出し防止について：
+- **各スライドは必ず1ページに収めてください**
+- **情報量が多い場合は、箇条書きの項目数を減らす、または文字数を削減してください**
+- **コンテンツがスライドからはみ出すことは絶対に避けてください**`;
 }
 
 /**
@@ -252,7 +260,9 @@ function buildSingleSlidePrompt(
 - 上記の詳細情報には、テーマ「${userInput.theme}」から外れる内容も含まれている可能性があります
 - **必ずテーマ「${userInput.theme}」に沿った内容だけを選択して使用してください**
 - テーマと関連性が低い情報は使用しないでください
-- ${userInput.slideCount || 1}枚のスライドに収まるよう、最も重要な情報のみを厳選してください`,
+- **${userInput.slideCount || 1}枚のスライドに収まるよう、最も重要な情報のみを厳選してください**
+- **各スライドは必ず1ページに収めてください。コンテンツがはみ出す場合は情報量を削減してください**
+- **箇条書きは3-5項目程度に抑え、各項目は50文字以内にしてください**`,
     buildStyleSection(style, layoutRules, userInput.mode),
     buildConstraintsSection(layoutRules),
     buildGeminiCanvasSection(userInput.mode),
@@ -415,7 +425,9 @@ function buildRoleSection(slideCount: number, mode?: string): string {
 - HTML/CSS/JavaScriptコードは一切書かないでください
 - ナビゲーション要素（次へ/前へボタン、ページ送り）は含めないでください
 - インタラクティブな要素（ボタン、フォーム）は使用しないでください
-- **各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）${blueColorWarning}
+- **【最重要】各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）
+- **【最重要】コンテンツがはみ出しそうな場合は、フォントサイズを小さくするのではなく、情報量を削減してください**
+- **【最重要】情報を詰め込みすぎず、余白を確保してください。読みやすさが最優先です**${blueColorWarning}
 - 各スライドは独立したページとして作成してください
 - Googleスライドにエクスポート可能な形式で作成してください`;
 }
@@ -529,14 +541,21 @@ function buildStructureSection(outline: SlideOutline[]): string {
  */
 function buildConstraintsSection(layoutRules: PromptInput['layoutRules']): string {
   return `【制約事項】
-- **【重要】各スライドは必ず1ページに収めてください。ページをまたぐことは絶対に避けてください**
-- 1スライドあたりの文字数: ${layoutRules.textLimits.bodyPerSlide}文字以内
+- **【最重要】各スライドは必ず1ページに収めてください。ページをまたぐことは絶対に避けてください**
+- **【最重要】コンテンツがはみ出す場合は、必ず以下の対策を実施してください：**
+  1. **箇条書きの項目数を減らす（最大${layoutRules.bulletPoints.max}項目）**
+  2. **各項目の文字数を削減する（${layoutRules.bulletPoints.characterLimit}文字以内厳守）**
+  3. **フォントサイズを小さくするのではなく、情報量を削減する**
+  4. **詳細な説明は省略し、キーワードやポイントのみ記載する**
+  5. **余白を確保し、読みやすさを優先する**
+- 1スライドあたりの文字数: ${layoutRules.textLimits.bodyPerSlide}文字以内（厳守）
 - スライドタイトル: ${layoutRules.textLimits.slideTitle}文字以内
 - 専門用語を使う場合は必ず説明を添える
 - 視覚的に読みやすいレイアウトを心がける
-- 情報を詰め込みすぎず、1スライド1メッセージを原則とする
-- 箇条書きは簡潔に、各項目は${layoutRules.bulletPoints.characterLimit}文字以内
-- 内容が多い場合は、文字数を削減するか、次のスライドに分割してください`;
+- **情報を詰め込みすぎず、1スライド1メッセージを原則とする（最重要）**
+- **箇条書きは簡潔に、各項目は${layoutRules.bulletPoints.characterLimit}文字以内（厳守）**
+- **内容が多い場合は、文字数を大幅に削減するか、次のスライドに分割してください**
+- **文字がスライドからはみ出すことは絶対に許されません。はみ出しそうな場合は必ず情報を削減してください**`;
 }
 
 /**
@@ -566,7 +585,9 @@ function buildGeminiCanvasSection(mode?: string): string {
 - **ナビゲーション要素（次へ/前へボタン、ページ送り、インデックスなど）は含めないでください**
 - **インタラクティブな要素（ボタン、フォーム、アニメーションなど）は使用しないでください**
 - 各スライドは独立したページとして作成してください
-- **各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）
+- **【最重要】各スライドは必ず1ページに収めてください**（ページをまたぐことは絶対に避けてください）
+- **【最重要】コンテンツがはみ出しそうな場合は、フォントを小さくするのではなく、必ず情報量を削減してください**
+- **【最重要】情報を詰め込みすぎず、余白を確保してください。読みやすさが最優先です**
 - Googleスライドにエクスポート可能なシンプルなレイアウトを使用してください${titleDecorationRules}
 
 ▼ テキスト色について（重要）
