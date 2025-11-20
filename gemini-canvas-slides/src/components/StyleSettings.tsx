@@ -302,7 +302,7 @@ export default function StyleSettings({
         </div>
       )}
 
-      {/* アクセントカラー選択（ティースリーモードのみ表示） */}
+      {/* アクセントカラー選択（パターン指定モードのみ表示） */}
       {mode === 't3' && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">

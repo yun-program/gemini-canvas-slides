@@ -182,12 +182,12 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
   // subModeまたはt3SubModeを取得（後方互換性のため）
   const subMode = userInput.subMode || userInput.t3SubMode;
 
-  // ティースリーモードのセット生成の場合（新形式）
+  // パターン指定モードのセット生成の場合（新形式）
   if (userInput.mode === 't3' && subMode === 'set') {
     return buildT3SetGenerationPrompt(input, style, layoutRules);
   }
 
-  // ティースリーモードの単体生成の場合
+  // パターン指定モードの単体生成の場合
   if (userInput.mode === 't3' && subMode === 'single' && userInput.selectedPattern) {
     return buildSingleSlidePrompt(input, style, layoutRules, userInput.selectedPattern);
   }
@@ -398,7 +398,7 @@ function buildGeneralSingleSlidePrompt(
 }
 
 /**
- * ティースリーモードのセット生成用プロンプトを生成（新形式）
+ * パターン指定モードのセット生成用プロンプトを生成（新形式）
  */
 function buildT3SetGenerationPrompt(
   input: PromptInput,
@@ -410,7 +410,7 @@ function buildT3SetGenerationPrompt(
   const sizes = style.sizes as any;
   const colors = { ...style.colors } as any;
 
-  // カスタムアクセントカラーが指定されている場合は上書き（ティースリーモード専用）
+  // カスタムアクセントカラーが指定されている場合は上書き（パターン指定モード専用）
   if (userInput.customAccentColors) {
     colors.primary = userInput.customAccentColors.main;
     colors.secondary = userInput.customAccentColors.sub;
@@ -636,7 +636,7 @@ ${allPatterns}
 }
 
 /**
- * ティースリーモードの単体生成用プロンプトを生成
+ * パターン指定モードの単体生成用プロンプトを生成
  */
 function buildSingleSlidePrompt(
   input: PromptInput,
@@ -917,7 +917,7 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
   const sizes = style.sizes as any;
   const colors = { ...style.colors } as any;
 
-  // カスタムアクセントカラーが指定されている場合は上書き（ティースリーモードのみ）
+  // カスタムアクセントカラーが指定されている場合は上書き（パターン指定モードのみ）
   if (mode === 't3' && customAccentColors) {
     colors.primary = customAccentColors.main;
     colors.secondary = customAccentColors.sub;
@@ -1024,7 +1024,7 @@ function buildConstraintsSection(layoutRules: PromptInput['layoutRules']): strin
  */
 function buildGeminiCanvasSection(mode?: string): string {
   const titleDecorationRules = mode === 't3'
-    ? `\n- **【ティースリーモード限定】ページタイトル行に線や図形で装飾を入れないでください**
+    ? `\n- **【パターン指定モード限定】ページタイトル行に線や図形で装飾を入れないでください**
   - タイトル行は純粋なテキストのみで構成（縦線、枠線、記号装飾などは禁止）`
     : '';
 
