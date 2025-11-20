@@ -3,7 +3,7 @@ import InputForm from './components/InputForm';
 import StyleSettings from './components/StyleSettings';
 import PromptDisplay from './components/PromptDisplay';
 import { buildPrompt } from './services/promptBuilder';
-import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, T3SubMode, AccentColors } from './types';
+import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, SubMode, AccentColors } from './types';
 
 // 設定ファイルのインポート
 import templatesData from '../config/templates.json';
@@ -14,7 +14,7 @@ import stylesCorporateData from '../config/styles_corporate.json';
 function App() {
   // モード管理
   const [appMode, setAppMode] = useState<AppMode>('general');
-  const [t3SubMode, setT3SubMode] = useState<T3SubMode>('set');
+  const [subMode, setSubMode] = useState<SubMode>('set'); // 両モード共通のサブモード
 
   // アクセントカラーの管理（デフォルトは青系）
   const [customAccentColors, setCustomAccentColors] = useState<AccentColors>({
@@ -72,7 +72,8 @@ function App() {
     const inputWithMode = {
       ...userInput,
       mode: appMode,
-      t3SubMode: appMode === 't3' ? t3SubMode : undefined,
+      subMode: subMode,
+      t3SubMode: subMode, // 後方互換性のため
       customAccentColors,
     };
 
@@ -139,31 +140,33 @@ function App() {
             </button>
           </div>
 
-          {/* ティースリーモード時のサブモード選択 */}
-          {appMode === 't3' && (
-            <div className="flex justify-center space-x-2 mt-4 max-w-md mx-auto">
-              <button
-                onClick={() => setT3SubMode('set')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  t3SubMode === 'set'
-                    ? 'bg-purple-100 text-purple-800 border-2 border-purple-600'
-                    : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                セット生成
-              </button>
-              <button
-                onClick={() => setT3SubMode('single')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  t3SubMode === 'single'
-                    ? 'bg-purple-100 text-purple-800 border-2 border-purple-600'
-                    : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                単体生成
-              </button>
-            </div>
-          )}
+          {/* サブモード選択（両モード共通） */}
+          <div className="flex justify-center space-x-2 mt-4 max-w-md mx-auto">
+            <button
+              onClick={() => setSubMode('set')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                subMode === 'set'
+                  ? appMode === 'general'
+                    ? 'bg-blue-100 text-blue-800 border-2 border-blue-600'
+                    : 'bg-purple-100 text-purple-800 border-2 border-purple-600'
+                  : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              セット生成
+            </button>
+            <button
+              onClick={() => setSubMode('single')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                subMode === 'single'
+                  ? appMode === 'general'
+                    ? 'bg-blue-100 text-blue-800 border-2 border-blue-600'
+                    : 'bg-purple-100 text-purple-800 border-2 border-purple-600'
+                  : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              単体生成
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -191,7 +194,7 @@ function App() {
               <InputForm
                 onSubmit={handleSubmit}
                 mode={appMode}
-                t3SubMode={t3SubMode}
+                subMode={subMode}
                 templates={currentTemplates}
                 isGenerating={isGenerating}
               />

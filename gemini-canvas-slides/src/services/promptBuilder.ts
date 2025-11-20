@@ -179,21 +179,29 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
 export function buildPrompt(input: PromptInput): GeneratedPrompt {
   const { template, style, layoutRules, userInput } = input;
 
+  // subModeまたはt3SubModeを取得（後方互換性のため）
+  const subMode = userInput.subMode || userInput.t3SubMode;
+
   // ティースリーモードのセット生成の場合（新形式）
-  if (userInput.mode === 't3' && userInput.t3SubMode === 'set') {
+  if (userInput.mode === 't3' && subMode === 'set') {
     return buildT3SetGenerationPrompt(input, style, layoutRules);
   }
 
   // ティースリーモードの単体生成の場合
-  if (userInput.mode === 't3' && userInput.t3SubMode === 'single' && userInput.selectedPattern) {
+  if (userInput.mode === 't3' && subMode === 'single' && userInput.selectedPattern) {
     return buildSingleSlidePrompt(input, style, layoutRules, userInput.selectedPattern);
+  }
+
+  // 汎用モードの単体生成の場合
+  if (userInput.mode === 'general' && subMode === 'single') {
+    return buildGeneralSingleSlidePrompt(input, style, layoutRules);
   }
 
   const outline = generateOutline(input);
   const recommendation = recommendSlideCount(userInput);
 
-  // 段階的生成モードの場合（汎用モードのみ）
-  if (userInput.mode === 'general' && userInput.useStepByStep) {
+  // 段階的生成モードの場合（汎用モードのセット生成時のみ）
+  if (userInput.mode === 'general' && subMode === 'set' && userInput.useStepByStep) {
     return buildStepByStepPrompts(input, outline, style, layoutRules, recommendation);
   }
 
@@ -301,6 +309,88 @@ ${pattern.guidance}`;
 }).join('\n\n')}
 
 ---`;
+}
+
+/**
+ * 汎用モードの単体生成用プロンプトを生成
+ */
+function buildGeneralSingleSlidePrompt(
+  input: PromptInput,
+  style: PromptInput['style'],
+  layoutRules: PromptInput['layoutRules']
+): GeneratedPrompt {
+  const { template, userInput } = input;
+
+  const promptParts = [
+    `スライドを作成して。
+
+---
+
+## 【役割】
+
+あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
+
+---`,
+    buildThemeSection(userInput),
+    `## 【必要なスライド枚数】
+
+**1枚**
+
+---
+
+## 【はみ出し防止ルール】
+
+* 1スライド最大 **${layoutRules.textLimits.bodyPerSlide}文字**
+* 箇条書き：**${layoutRules.bulletPoints.min}〜${layoutRules.bulletPoints.max}項目／1項目${layoutRules.bulletPoints.characterLimit}文字以内**
+* タイトル：**${layoutRules.textLimits.slideTitle}文字以内**
+* フォントサイズは変えない
+* 長文の場合は要点のみ抽出して圧縮
+
+---`,
+    buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
+    buildConstraintsSection(layoutRules),
+    buildGeminiCanvasSection(userInput.mode),
+    `## 【出力形式】
+
+各スライドは次の形式で出力：
+
+1. スライド番号とタイトル
+2. 本文（箇条書き・表など）
+3. 必要に応じてスピーカーノート
+
+---
+
+## 【禁止事項】
+
+* 説明文・前置き
+* HTML／CSSコードの出力
+* 設計書の説明
+
+---
+
+**1枚のスライドを作成してください。**`,
+  ];
+
+  const prompt = promptParts.join('\n\n');
+
+  // 汎用モードの単体生成用のアウトライン
+  const outline: SlideOutline[] = [{
+    slideNumber: 1,
+    title: userInput.theme,
+    keyPoints: ['単体スライド'],
+    notes: `テーマ: ${userInput.theme}\n${userInput.details}`
+  }];
+
+  return {
+    prompt,
+    outline,
+    metadata: {
+      templateId: template.id,
+      styleId: style.id,
+      generatedAt: new Date().toISOString(),
+      isStepByStep: false,
+    },
+  };
 }
 
 /**

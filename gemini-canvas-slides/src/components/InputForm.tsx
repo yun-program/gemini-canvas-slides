@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import FileUploader from './FileUploader';
-import type { UserInput, AppMode, T3SubMode, Template, SlidePattern } from '../types';
+import type { UserInput, AppMode, SubMode, Template, SlidePattern } from '../types';
 import { recommendSlideCount } from '../services/promptBuilder';
 
 interface InputFormProps {
   onSubmit: (input: UserInput) => void;
   mode: AppMode;
-  t3SubMode?: T3SubMode;
+  subMode?: SubMode; // 両モード共通のサブモード
   templates: Template[];
   isGenerating?: boolean;
 }
 
-export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGenerating }: InputFormProps) {
+export default function InputForm({ onSubmit, mode, subMode, templates, isGenerating }: InputFormProps) {
   const [theme, setTheme] = useState('');
   const [details, setDetails] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
@@ -30,8 +30,8 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
     maxSuggested: number;
   } | null>(null);
 
-  // ティースリーモードの単体生成時のパターン一覧
-  const t3Patterns = mode === 't3' && t3SubMode === 'single' && templates.length > 0
+  // ティースリーモードの単体生成時のパターン一覧（セット生成のカスタムパターンでも使用）
+  const t3Patterns = mode === 't3' && templates.length > 0
     ? templates.find(t => t.id === 'corporate-training-full')?.structure || []
     : [];
 
@@ -143,22 +143,27 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
       additionalNotes: additionalNotes || undefined,
       slideCount: slideCount || recommendation?.recommended || 5,
       mode,
-      t3SubMode,
+      subMode,
+      t3SubMode: subMode, // 後方互換性のため
     };
 
-    // 汎用モードのみ段階的生成を使用可能
-    if (mode === 'general') {
+    // 汎用モードのセット生成時のみ段階的生成を使用可能
+    if (mode === 'general' && subMode === 'set') {
       input.useStepByStep = useStepByStep;
     }
 
-    // ティースリーモードの単体生成時
-    if (mode === 't3' && t3SubMode === 'single' && selectedPattern) {
-      input.selectedPattern = selectedPattern;
+    // 単体生成時の処理
+    if (subMode === 'single') {
       input.slideCount = 1; // 単体生成は1枚のみ
+
+      // ティースリーモードの単体生成時はパターンを指定
+      if (mode === 't3' && selectedPattern) {
+        input.selectedPattern = selectedPattern;
+      }
     }
 
     // ティースリーモードのセット生成時：カスタムパターン指定
-    if (mode === 't3' && t3SubMode === 'set' && useCustomPatterns && customSlidePatterns.length > 0) {
+    if (mode === 't3' && subMode === 'set' && useCustomPatterns && customSlidePatterns.length > 0) {
       input.customSlidePatterns = customSlidePatterns;
     }
 
@@ -196,7 +201,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
           value={details}
           onChange={(e) => setDetails(e.target.value)}
           placeholder={
-            mode === 't3' && t3SubMode === 'single'
+            subMode === 'single'
               ? "【単体生成モード】テーマに関連する情報のみを入力してください。スライド1枚に収まる程度の情報量が適切です。"
               : "スライドに含めたい内容、伝えたいメッセージ、重要なポイントなどを記入してください。"
           }
@@ -204,7 +209,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
           rows={8}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
         />
-        {mode === 't3' && t3SubMode === 'single' ? (
+        {subMode === 'single' ? (
           <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
             <p className="font-semibold">⚠️ 単体生成モードの注意事項</p>
             <ul className="mt-1 ml-4 list-disc space-y-1">
@@ -260,7 +265,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
       </div>
 
       {/* ティースリーモードの単体生成時：パターン選択 */}
-      {mode === 't3' && t3SubMode === 'single' && (
+      {mode === 't3' && subMode === 'single' && (
         <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
           <label htmlFor="pattern" className="block text-sm font-semibold text-gray-700 mb-2">
             スライドパターンを選択 <span className="text-red-500">*</span>
@@ -286,7 +291,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
       )}
 
       {/* スライド枚数の設定（セット生成時のみ） */}
-      {!(mode === 't3' && t3SubMode === 'single') && (
+      {subMode === 'set' && (
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <label htmlFor="slideCount" className="block text-sm font-semibold text-gray-700 mb-2">
             スライド枚数
@@ -322,7 +327,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
       )}
 
       {/* ティースリーモードのセット生成：カスタムスライドパターン指定 */}
-      {mode === 't3' && t3SubMode === 'set' && (
+      {mode === 't3' && subMode === 'set' && (
         <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
           <div className="flex items-start gap-3 mb-3">
             <input
@@ -375,8 +380,8 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
         </div>
       )}
 
-      {/* 段階的生成モード（汎用モードのみ） */}
-      {mode === 'general' && (
+      {/* 段階的生成モード（汎用モードのセット生成時のみ） */}
+      {mode === 'general' && subMode === 'set' && (
         <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
           <div className="flex items-start gap-3">
             <input
@@ -411,7 +416,7 @@ export default function InputForm({ onSubmit, mode, t3SubMode, templates, isGene
 
       <button
         type="submit"
-        disabled={!theme || !details || (mode === 't3' && t3SubMode === 'single' && !selectedPattern) || isGenerating}
+        disabled={!theme || !details || (mode === 't3' && subMode === 'single' && !selectedPattern) || isGenerating}
         className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
       >
         {isGenerating ? '生成中...' : 'プロンプトを生成'}
