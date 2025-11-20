@@ -46,6 +46,8 @@ export interface Style {
   font: FontConfig;
   colors: ColorConfig;
   sizes: SizeConfig;
+  isCustom?: boolean; // カスタムスタイルかどうか
+  createdAt?: string; // 作成日時（ISO 8601形式）
 }
 
 export interface LayoutRules {
@@ -88,6 +90,7 @@ export interface SlidePattern {
   slideNumber: number; // スライド番号（1から始まる）
   patternType: string; // パターンタイプ（例: "title-cover", "agenda"）
   patternTitle: string; // パターン名（例: "表紙（タイトルスライド）"）
+  contentGuidance?: string; // このスライドに書いてほしい内容の指定（オプション）
 }
 
 // ユーザー入力の型
@@ -106,7 +109,7 @@ export interface UserInput {
   customSlidePatterns?: SlidePattern[]; // ティースリーモードのセット生成時のカスタムスライドパターン
 }
 
-// 骨子（アウトライン）の型
+// 構成（アウトライン）の型
 export interface SlideOutline {
   slideNumber: number;
   title: string;
@@ -134,7 +137,10 @@ export interface GeneratedPrompt {
     recommendedSlideCount?: number; // 推奨スライド枚数
     isStepByStep?: boolean; // 段階的生成モードか
   };
-  stepByStepPrompts?: string[]; // 段階的生成の場合の各段階のプロンプト
+  stepByStepPrompts?: {
+    outlinePrompt: string; // 構成生成プロンプト
+    detailPrompt: string;  // スライド生成プロンプト（構成貼り付け用プレースホルダー付き）
+  };
 }
 
 // スライド枚数の推奨情報

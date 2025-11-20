@@ -111,7 +111,7 @@ function restructureContentBySlideCount(
 }
 
 /**
- * テンプレートから骨子を生成
+ * テンプレートから構成を生成
  */
 export function generateOutline(input: PromptInput): SlideOutline[] {
   const { template, userInput, customSlides } = input;
@@ -126,7 +126,7 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
                      recommendSlideCount(userInput).recommended ||
                      template.defaultSlideCount;
 
-  // スライド枚数に応じて骨子を調整
+  // スライド枚数に応じて構成を調整
   if (slideCount === template.structure.length) {
     // テンプレート通り
     return template.structure.map((slide, index) => ({
@@ -286,12 +286,13 @@ function buildCustomPatternsSection(customPatterns: SlidePattern[], template: Te
   // 各スライドのパターンをリストアップ
   const slideList = customPatterns.map(cp => {
     const pattern = patternMap[cp.patternType];
-    return `* ${cp.slideNumber}枚目：**${pattern.number}. ${pattern.title}**`;
+    const contentNote = cp.contentGuidance ? `\n  → 内容: ${cp.contentGuidance}` : '';
+    return `* ${cp.slideNumber}枚目：**${pattern.number}. ${pattern.title}**${contentNote}`;
   }).join('\n');
 
   return `## 【スライド構成（ユーザー指定）】
 
-以下の順序で、指定されたパターンを使用してスライドを作成してください：
+以下の順序で、指定されたパターンと内容でスライドを作成してください：
 
 ${slideList}
 
@@ -303,9 +304,12 @@ ${slideList}
 
 ${customPatterns.map(cp => {
   const pattern = patternMap[cp.patternType];
-  return `### ${pattern.number}. **${pattern.title}**
+  const contentGuidance = cp.contentGuidance
+    ? `\n\n**【このスライドに含める内容】**\n${cp.contentGuidance}\n\n上記の内容を元資料から抽出・展開して、このパターンに沿ったスライドを作成してください。`
+    : '';
+  return `### スライド${cp.slideNumber}: ${pattern.number}. **${pattern.title}**
 
-${pattern.guidance}`;
+${pattern.guidance}${contentGuidance}`;
 }).join('\n\n')}
 
 ---`;
@@ -404,9 +408,9 @@ function buildT3SetGenerationPrompt(
   const { template, userInput } = input;
   const slideCount = userInput.slideCount || template.defaultSlideCount;
   const sizes = style.sizes as any;
-  const colors = style.colors as any;
+  const colors = { ...style.colors } as any;
 
-  // カスタムアクセントカラーが指定されている場合は上書き
+  // カスタムアクセントカラーが指定されている場合は上書き（ティースリーモード専用）
   if (userInput.customAccentColors) {
     colors.primary = userInput.customAccentColors.main;
     colors.secondary = userInput.customAccentColors.sub;
@@ -735,11 +739,10 @@ function buildStepByStepPrompts(
   recommendation: SlideCountRecommendation
 ): GeneratedPrompt {
   const { userInput } = input;
-  const stepByStepPrompts: string[] = [];
 
-  // ステップ1: 骨子（アウトライン）生成のプロンプト
-  const step1Parts = [
-    `スライドの骨子を作成して。
+  // ステップ1: 構成（アウトライン）生成のプロンプト
+  const outlinePromptParts = [
+    `構成を作成して。
 
 ---
 
@@ -757,7 +760,7 @@ function buildStepByStepPrompts(
 
 ## 【出力形式】
 
-以下の形式で、${outline.length}枚分の骨子を出力してください：
+以下の形式で、${outline.length}枚分の構成を出力してください：
 
 \`\`\`
 スライド 1: [タイトル]
@@ -776,7 +779,7 @@ function buildStepByStepPrompts(
 ## 【重要】
 
 - 各スライドのタイトルと主要ポイント（3-5項目）のみを記載
-- 実際のスライドコンテンツ（本文や図表）は作成しない
+- これは構成案です。実際のスライドコンテンツ（詳細な本文や図表）は次のステップで作成します
 - 全体で${outline.length}枚のスライド構成を提案
 
 ---
@@ -788,20 +791,11 @@ function buildStepByStepPrompts(
 * 設計書の説明`,
   ];
 
-  stepByStepPrompts.push(step1Parts.join('\n\n'));
+  const outlinePrompt = outlinePromptParts.join('\n\n');
 
-  // ステップ2以降: 各スライドグループの詳細生成
-  // スライドを3-4枚ずつのグループに分割
-  const groupSize = 3;
-  const groups = Math.ceil(outline.length / groupSize);
-
-  for (let i = 0; i < groups; i++) {
-    const startIdx = i * groupSize;
-    const endIdx = Math.min(startIdx + groupSize, outline.length);
-    const groupSlides = outline.slice(startIdx, endIdx);
-
-    const step2Parts = [
-      `スライドを作成して。
+  // ステップ2: スライド生成プロンプト（構成貼り付け用プレースホルダー付き）
+  const detailPromptParts = [
+    `スライドを作成して。
 
 ---
 
@@ -809,13 +803,35 @@ function buildStepByStepPrompts(
 
 あなたは「分かりやすく整理されたスライド原稿」を作成する専門家です。
 
+**【最重要】これは段階的生成モードのステップ2です。構成案ではなく、実際のスライドそのものをCanvas機能で作成してください。**
+
 ---`,
-      buildThemeSection(userInput),
-      `## 【対象スライド】
+    buildThemeSection(userInput),
+    `## 【必要なスライド枚数】
 
-${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
+**${outline.length}枚**
 
-**先ほど作成した骨子をもとに、詳細なスライドコンテンツを作成してください。**
+---
+
+## 【スライド構成（確認済み）】
+
+以下の構成に基づいて、**詳細な内容を含む完成版のスライド**をCanvas機能で作成してください。
+
+=====================
+【ここに生成された構成を貼り付けてください】
+
+例：
+スライド 1: タイトルスライド
+- 主要ポイント1
+- 主要ポイント2
+
+スライド 2: ○○について
+- 主要ポイント1
+- 主要ポイント2
+...
+=====================
+
+**【重要】上記は構成案です。この構成に基づいて、詳細な本文・箇条書き・図表などを含む完成版のスライドを作成してください。構成をそのまま出力するのではなく、各ポイントを展開して詳細なスライドコンテンツにしてください。**
 
 ---
 
@@ -828,36 +844,17 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
 * 長文の場合は要点のみ抽出して圧縮
 
 ---`,
-      buildStyleSection(style, layoutRules, userInput.mode, userInput.customAccentColors),
-      buildConstraintsSection(layoutRules),
-      buildGeminiCanvasSection(userInput.mode),
-      `## 【出力形式】
+    buildConstraintsSection(layoutRules),
+    buildGeminiCanvasSection(userInput.mode),
+    buildOutputExampleSection(),
+    buildExecutionSection(outline.length),
+  ];
 
-各スライドは次の形式で出力：
+  const detailPrompt = detailPromptParts.join('\n\n');
 
-1. スライド番号とタイトル
-2. 本文（箇条書き・表など）
-3. 必要に応じてスピーカーノート
-
----
-
-## 【禁止事項】
-
-* 説明文・前置き
-* HTML／CSSコードの出力
-* 設計書の説明
-
----
-
-**スライド${startIdx + 1}〜${endIdx}の詳細なコンテンツを、上記のスタイル規定に従って作成してください。**`,
-    ];
-
-    stepByStepPrompts.push(step2Parts.join('\n\n'));
-  }
-
-  // 最初のプロンプト（骨子生成）を主プロンプトとして返す
+  // 構成生成プロンプトを主プロンプトとして返す
   return {
-    prompt: stepByStepPrompts[0],
+    prompt: outlinePrompt,
     outline,
     metadata: {
       templateId: input.template.id,
@@ -866,7 +863,10 @@ ${groupSlides.map(s => `スライド${s.slideNumber}: ${s.title}`).join('\n')}
       recommendedSlideCount: recommendation.recommended,
       isStepByStep: true,
     },
-    stepByStepPrompts,
+    stepByStepPrompts: {
+      outlinePrompt,
+      detailPrompt,
+    },
   };
 }
 
@@ -917,8 +917,8 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
   const sizes = style.sizes as any;
   const colors = { ...style.colors } as any;
 
-  // カスタムアクセントカラーが指定されている場合は上書き
-  if (customAccentColors) {
+  // カスタムアクセントカラーが指定されている場合は上書き（ティースリーモードのみ）
+  if (mode === 't3' && customAccentColors) {
     colors.primary = customAccentColors.main;
     colors.secondary = customAccentColors.sub;
   }
@@ -1095,11 +1095,11 @@ export function formatPromptForCopy(prompt: string): string {
 }
 
 /**
- * 骨子をMarkdown形式で出力
+ * 構成をMarkdown形式で出力
  */
 export function formatOutlineAsMarkdown(outline: SlideOutline[]): string {
   const lines = [
-    '# スライド骨子',
+    '# スライド構成',
     '',
     ...outline.map((slide) => {
       const keyPoints = slide.keyPoints.length > 0

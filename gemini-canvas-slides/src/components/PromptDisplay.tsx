@@ -10,10 +10,20 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
   const [copied, setCopied] = useState(false);
   const [showOutline, setShowOutline] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const [pastedOutline, setPastedOutline] = useState('');
 
   const isStepByStep = result.metadata.isStepByStep && result.stepByStepPrompts;
-  const prompts = isStepByStep ? result.stepByStepPrompts! : [result.prompt];
-  const currentPrompt = prompts[currentStep];
+  const prompts = isStepByStep
+    ? [result.stepByStepPrompts!.outlinePrompt, result.stepByStepPrompts!.detailPrompt]
+    : [result.prompt];
+
+  // 構成が入力されている場合は、プレースホルダーを置き換え
+  let currentPrompt = prompts[currentStep];
+  if (isStepByStep && currentStep === 1 && pastedOutline.trim()) {
+    // プレースホルダー部分を検出して置き換え
+    const placeholderPattern = /={5,}\n【ここに生成された構成を貼り付けてください】[\s\S]*?={5,}/;
+    currentPrompt = currentPrompt.replace(placeholderPattern, `=====================\n${pastedOutline.trim()}\n=====================`);
+  }
 
   const handleCopy = async (text?: string) => {
     try {
@@ -51,8 +61,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
               )}
               {isStepByStep && (
                 <p className="text-amber-700">
-                  🔄 段階的生成モード: {prompts.length}ステップ
-                  （ステップ1: 骨子生成、ステップ2以降: 詳細生成）
+                  🔄 段階的生成モード: 構成確認後にスライド生成
                 </p>
               )}
             </div>
@@ -60,7 +69,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
         </div>
       </div>
 
-      {/* 骨子セクション */}
+      {/* 構成セクション */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -68,7 +77,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              スライド骨子
+              スライド構成
             </h3>
             <button
               onClick={() => setShowOutline(!showOutline)}
@@ -104,7 +113,7 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
               onClick={handleCopyOutline}
               className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              骨子をMarkdown形式でコピー
+              構成をMarkdown形式でコピー
             </button>
           </div>
         )}
@@ -133,35 +142,63 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
           {isStepByStep && (
             <div className="mb-4">
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {prompts.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentStep(index)}
-                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                      currentStep === index
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {index === 0 ? '📝 ステップ1: 骨子生成' : `✏️ ステップ${index + 1}: 詳細生成`}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setCurrentStep(0)}
+                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                    currentStep === 0
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  📝 構成生成プロンプト
+                </button>
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                    currentStep === 1
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  ✏️ スライド生成プロンプト
+                </button>
               </div>
               <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
                 <p className="text-sm text-amber-800">
                   {currentStep === 0 ? (
                     <>
-                      <strong>ステップ1:</strong> まず骨子（アウトライン）を生成します。
-                      Geminiに貼り付けて、各スライドのタイトルと主要ポイントを確認してください。
+                      <strong>📝 構成生成プロンプト：</strong> このプロンプトでスライドの構成（各スライドのタイトルと主要ポイント）を生成します。
+                      生成された構成を確認・編集してから、次のステップに進んでください。
                     </>
                   ) : (
                     <>
-                      <strong>ステップ{currentStep + 1}:</strong>
-                      ステップ1で生成した骨子を参照しながら、詳細なスライドコンテンツを生成します。
+                      <strong>✏️ スライド生成プロンプト：</strong> 下のテキストエリアにGeminiで生成された構成を貼り付けてください。
+                      自動的にプロンプトに組み込まれます。全スライドを一括生成することでデザインが統一されます。
                     </>
                   )}
                 </p>
               </div>
+
+              {/* 構成入力エリア（スライド生成プロンプトタブの場合） */}
+              {currentStep === 1 && (
+                <div className="mt-3">
+                  <label htmlFor="outline-input" className="block text-sm font-semibold text-gray-800 mb-2">
+                    生成された構成を貼り付け
+                  </label>
+                  <textarea
+                    id="outline-input"
+                    value={pastedOutline}
+                    onChange={(e) => setPastedOutline(e.target.value)}
+                    placeholder="Geminiで生成された構成をここに貼り付けてください&#10;&#10;例：&#10;スライド 1: タイトルスライド&#10;- 主要ポイント1&#10;- 主要ポイント2&#10;&#10;スライド 2: 概要&#10;- ポイント1&#10;- ポイント2"
+                    className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm resize-vertical"
+                  />
+                  {pastedOutline.trim() && (
+                    <p className="mt-2 text-xs text-green-600 font-medium">
+                      ✅ 構成が入力されました。下のプロンプトに自動的に組み込まれています。
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -171,30 +208,15 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
             </pre>
           </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleCopy()}
-              className="flex-1 bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              {copied ? 'コピーしました!' : 'このプロンプトをコピー'}
-            </button>
-            {isStepByStep && prompts.length > 1 && (
-              <button
-                onClick={async () => {
-                  const allPrompts = prompts.map((p, i) =>
-                    `${'='.repeat(60)}\n【ステップ${i + 1}】\n${'='.repeat(60)}\n\n${p}`
-                  ).join('\n\n\n');
-                  await handleCopy(allPrompts);
-                }}
-                className="bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                全プロンプトをコピー
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => handleCopy()}
+            className="w-full bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            {copied ? 'コピーしました!' : 'このプロンプトをコピー'}
+          </button>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
@@ -206,11 +228,12 @@ export default function PromptDisplay({ result }: PromptDisplayProps) {
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
               {isStepByStep ? (
                 <>
-                  <li>「ステップ1: 骨子生成」のプロンプトをコピー</li>
-                  <li>Gemini (gemini.google.com) を開く</li>
-                  <li>コピーしたプロンプトを貼り付けて実行し、骨子を確認</li>
-                  <li>「ステップ2以降」のプロンプトで各スライドの詳細を順次生成</li>
-                  <li>すべてのスライドが完成したらGoogleスライドにエクスポート</li>
+                  <li>「📝 構成生成プロンプト」タブでプロンプトをコピーして Gemini で実行</li>
+                  <li>生成された構成を確認・必要に応じて編集</li>
+                  <li>「✏️ スライド生成プロンプト」タブに切り替え</li>
+                  <li>生成された構成を上のテキストエリアに貼り付け（自動的にプロンプトに組み込まれます）</li>
+                  <li>完成したプロンプトをコピーして Gemini で実行（全スライド一括生成でデザイン統一！）</li>
+                  <li>生成されたスライドをGoogleスライドにエクスポート</li>
                 </>
               ) : (
                 <>

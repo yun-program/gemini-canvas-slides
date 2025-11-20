@@ -90,7 +90,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
         patterns.push(existingPattern);
       } else {
         // デフォルトパターンを設定
-        let defaultPattern = availablePatterns[0];
+        let defaultPattern = availablePatterns.find(p => p.type === 'content-explanation') || availablePatterns[0];
         if (i === 1) {
           // 1枚目は表紙
           defaultPattern = availablePatterns.find(p => p.type === 'title-cover') || availablePatterns[0];
@@ -128,6 +128,17 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
       prev.map(p =>
         p.slideNumber === slideNumber
           ? { ...p, patternType: pattern.type, patternTitle: pattern.title }
+          : p
+      )
+    );
+  };
+
+  // 個別のスライドの内容指定を変更
+  const handleContentGuidanceChange = (slideNumber: number, contentGuidance: string) => {
+    setCustomSlidePatterns(prev =>
+      prev.map(p =>
+        p.slideNumber === slideNumber
+          ? { ...p, contentGuidance }
           : p
       )
     );
@@ -350,30 +361,48 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
           {useCustomPatterns && slideCount && customSlidePatterns.length > 0 && (
             <div className="mt-4 space-y-3 bg-white p-4 rounded-lg border border-purple-300">
               <h4 className="text-sm font-semibold text-purple-800 mb-3">
-                各スライドのパターンを選択（全{slideCount}枚）
+                各スライドのパターンと内容を指定（全{slideCount}枚）
               </h4>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {customSlidePatterns.map((pattern) => (
-                  <div key={pattern.slideNumber} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium text-gray-700 w-16">
-                      {pattern.slideNumber}枚目:
-                    </span>
-                    <select
-                      value={pattern.patternType}
-                      onChange={(e) => handlePatternChange(pattern.slideNumber, e.target.value)}
-                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    >
-                      {t3Patterns.map((p, index) => (
-                        <option key={index} value={p.type}>
-                          {p.title}
-                        </option>
-                      ))}
-                    </select>
+                  <div key={pattern.slideNumber} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-sm font-semibold text-gray-800 min-w-[60px]">
+                        {pattern.slideNumber}枚目
+                      </span>
+                      <select
+                        value={pattern.patternType}
+                        onChange={(e) => handlePatternChange(pattern.slideNumber, e.target.value)}
+                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      >
+                        {t3Patterns.map((p, index) => (
+                          <option key={index} value={p.type}>
+                            {p.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        このスライドに書いてほしい内容（オプション）
+                      </label>
+                      <textarea
+                        value={pattern.contentGuidance || ''}
+                        onChange={(e) => handleContentGuidanceChange(pattern.slideNumber, e.target.value)}
+                        placeholder="例: DX推進の3つの課題、導入事例（○○社）、費用対効果のグラフなど"
+                        rows={2}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-y"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        このスライドで伝えたい具体的な内容を記入すると、AIが的確に生成します
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-600 mt-3">
-                💡 デフォルトで1枚目は表紙、2枚目はアジェンダ、最後はQ&A/連絡先に設定されています。
+              <p className="text-xs text-gray-600 mt-3 p-2 bg-purple-50 rounded">
+                💡 デフォルトで1枚目は表紙、2枚目はアジェンダ、最後はQ&A/連絡先に設定されています。<br />
+                各スライドの内容を指定すると、AIが元資料の該当箇所を使って詳細なスライドを生成します。
               </p>
             </div>
           )}
@@ -396,15 +425,15 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
                 段階的生成モードを使用
               </label>
               <p className="mt-1 text-xs text-gray-600">
-                情報量が多い場合におすすめ。最初に骨子を生成し、その後各スライドの詳細を段階的に作成します。
+                情報量が多い場合におすすめ。最初に構成を生成し、その後各スライドの詳細を段階的に作成します。
                 Geminiが混乱せず、高品質なスライドを生成できます。
               </p>
               {useStepByStep && (
                 <div className="mt-2 p-2 bg-amber-100 rounded text-xs text-amber-800">
                   <strong>📝 使い方:</strong>
                   <ol className="list-decimal ml-4 mt-1 space-y-1">
-                    <li>ステップ1のプロンプトで骨子を生成</li>
-                    <li>生成された骨子を確認</li>
+                    <li>ステップ1のプロンプトで構成を生成</li>
+                    <li>生成された構成を確認</li>
                     <li>ステップ2以降のプロンプトで各スライドの詳細を生成</li>
                   </ol>
                 </div>
