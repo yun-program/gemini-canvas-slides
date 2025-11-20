@@ -266,6 +266,8 @@ function buildSingleSlidePrompt(
     buildGeminiCanvasSection(userInput.mode),
     `【実行指示】
 
+**プレビューに適したHTML形式で、すべてのスライドを作成してください。**
+
 **今すぐ「${pattern.title}」タイプの${userInput.slideCount || 1}枚のスライドを作成してください。**
 
 ❌ やってはいけないこと：
@@ -693,6 +695,8 @@ function buildOutputExampleSection(): string {
  */
 function buildExecutionSection(slideCount: number): string {
   return `【実行指示】
+
+**プレビューに適したHTML形式で、すべてのスライドを作成してください。**
 
 **今すぐ${slideCount}枚のスライドコンテンツを作成してください。**
 
