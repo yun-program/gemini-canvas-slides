@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Style } from '../types';
 
 interface CustomStyleModalProps {
@@ -14,16 +14,44 @@ export default function CustomStyleModal({
   onSave,
   editingStyle,
 }: CustomStyleModalProps) {
-  const [name, setName] = useState(editingStyle?.name || '');
-  const [description, setDescription] = useState(editingStyle?.description || '');
-  const [fontFamily, setFontFamily] = useState(editingStyle?.font.family || 'Noto Sans JP');
-  const [fontFallback, setFontFallback] = useState(editingStyle?.font.fallback || 'Yu Gothic, sans-serif');
-  const [primary, setPrimary] = useState(editingStyle?.colors.primary || '#1E40AF');
-  const [secondary, setSecondary] = useState(editingStyle?.colors.secondary || '#3B82F6');
-  const [text, setText] = useState(editingStyle?.colors.text || '#1F2937');
-  const [textLight, setTextLight] = useState(editingStyle?.colors.textLight || '#6B7280');
-  const [background, setBackground] = useState(editingStyle?.colors.background || '#FFFFFF');
-  const [accent, setAccent] = useState(editingStyle?.colors.accent || '#DBEAFE');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [fontFamily, setFontFamily] = useState('Noto Sans JP');
+  const [fontFallback, setFontFallback] = useState('Yu Gothic, sans-serif');
+  const [primary, setPrimary] = useState('#1E40AF');
+  const [secondary, setSecondary] = useState('#3B82F6');
+  const [text, setText] = useState('#1F2937');
+  const [textLight, setTextLight] = useState('#6B7280');
+  const [background, setBackground] = useState('#FFFFFF');
+  const [accent, setAccent] = useState('#DBEAFE');
+
+  // editingStyleが変更されたら、stateを更新
+  useEffect(() => {
+    if (editingStyle) {
+      setName(editingStyle.name + ' (コピー)');
+      setDescription(editingStyle.description);
+      setFontFamily(editingStyle.font.family);
+      setFontFallback(editingStyle.font.fallback);
+      setPrimary(editingStyle.colors.primary);
+      setSecondary(editingStyle.colors.secondary);
+      setText(editingStyle.colors.text);
+      setTextLight(editingStyle.colors.textLight);
+      setBackground(editingStyle.colors.background);
+      setAccent(editingStyle.colors.accent);
+    } else {
+      // 新規作成時はデフォルト値にリセット
+      setName('');
+      setDescription('');
+      setFontFamily('Noto Sans JP');
+      setFontFallback('Yu Gothic, sans-serif');
+      setPrimary('#1E40AF');
+      setSecondary('#3B82F6');
+      setText('#1F2937');
+      setTextLight('#6B7280');
+      setBackground('#FFFFFF');
+      setAccent('#DBEAFE');
+    }
+  }, [editingStyle, isOpen]);
 
   const handleSave = () => {
     if (!name.trim()) {
