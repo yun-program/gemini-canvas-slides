@@ -30,8 +30,8 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
     maxSuggested: number;
   } | null>(null);
 
-  // ティースリーモードの単体生成時のパターン一覧（セット生成のカスタムパターンでも使用）
-  const t3Patterns = mode === 't3' && templates.length > 0
+  // パターン指定モードの単体生成時のパターン一覧（セット生成のカスタムパターンでも使用）
+  const patternPatterns = mode === 't3' && templates.length > 0
     ? templates.find(t => t.id === 'corporate-training-full')?.structure || []
     : [];
 
@@ -81,7 +81,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
   // カスタムスライドパターンを初期化
   const initializeCustomPatterns = (count: number) => {
     const patterns: SlidePattern[] = [];
-    const availablePatterns = t3Patterns;
+    const availablePatterns = patternPatterns;
 
     for (let i = 1; i <= count; i++) {
       // 既存のパターンがあればそれを保持、なければデフォルトを設定
@@ -121,7 +121,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
 
   // 個別のスライドパターンを変更
   const handlePatternChange = (slideNumber: number, patternType: string) => {
-    const pattern = t3Patterns.find(p => p.type === patternType);
+    const pattern = patternPatterns.find(p => p.type === patternType);
     if (!pattern) return;
 
     setCustomSlidePatterns(prev =>
@@ -167,13 +167,13 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
     if (subMode === 'single') {
       input.slideCount = 1; // 単体生成は1枚のみ
 
-      // ティースリーモードの単体生成時はパターンを指定
+      // パターン指定モードの単体生成時はパターンを指定
       if (mode === 't3' && selectedPattern) {
         input.selectedPattern = selectedPattern;
       }
     }
 
-    // ティースリーモードのセット生成時：カスタムパターン指定
+    // パターン指定モードのセット生成時：カスタムパターン指定
     if (mode === 't3' && subMode === 'set' && useCustomPatterns && customSlidePatterns.length > 0) {
       input.customSlidePatterns = customSlidePatterns;
     }
@@ -275,7 +275,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
         />
       </div>
 
-      {/* ティースリーモードの単体生成時：パターン選択 */}
+      {/* パターン指定モードの単体生成時：パターン選択 */}
       {mode === 't3' && subMode === 'single' && (
         <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
           <label htmlFor="pattern" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -289,7 +289,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="">選択してください</option>
-            {t3Patterns.map((pattern, index) => (
+            {patternPatterns.map((pattern, index) => (
               <option key={index} value={pattern.type}>
                 {pattern.title} - {pattern.guidance}
               </option>
@@ -337,7 +337,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
         </div>
       )}
 
-      {/* ティースリーモードのセット生成：カスタムスライドパターン指定 */}
+      {/* パターン指定モードのセット生成：カスタムスライドパターン指定 */}
       {mode === 't3' && subMode === 'set' && (
         <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
           <div className="flex items-start gap-3 mb-3">

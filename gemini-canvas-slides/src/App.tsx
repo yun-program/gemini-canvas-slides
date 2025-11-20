@@ -42,17 +42,17 @@ function App() {
   const generalStyles = (stylesData as StyleConfig).styles;
   const generalLayoutRules = (stylesData as StyleConfig).layoutRules;
 
-  // ティースリーモード用のテンプレート
-  const t3Templates = (templatesCorporateData as TemplateConfig).templates;
-  const t3Styles = (stylesCorporateData as StyleConfig).styles;
-  const t3LayoutRules = (stylesCorporateData as StyleConfig).layoutRules;
+  // パターン指定モード用のテンプレート
+  const patternTemplates = (templatesCorporateData as TemplateConfig).templates;
+  const patternStyles = (stylesCorporateData as StyleConfig).styles;
+  const patternLayoutRules = (stylesCorporateData as StyleConfig).layoutRules;
 
   // 現在のモードに応じたテンプレートとスタイルを取得（カスタムスタイルをマージ）
-  const currentTemplates = appMode === 'general' ? generalTemplates : t3Templates;
+  const currentTemplates = appMode === 'general' ? generalTemplates : patternTemplates;
   const currentStyles = appMode === 'general'
     ? [...generalStyles, ...customStylesList] // 汎用モードのみカスタムスタイルを追加
-    : t3Styles;
-  const currentLayoutRules = appMode === 'general' ? generalLayoutRules : t3LayoutRules;
+    : patternStyles;
+  const currentLayoutRules = appMode === 'general' ? generalLayoutRules : patternLayoutRules;
 
   const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplates[0].id);
   const [selectedStyleId, setSelectedStyleId] = useState(currentStyles[0].id);
@@ -62,8 +62,8 @@ function App() {
   // モード変更時にテンプレートとスタイルをリセット
   const handleModeChange = (mode: AppMode) => {
     setAppMode(mode);
-    const newTemplates = mode === 'general' ? generalTemplates : t3Templates;
-    const newStyles = mode === 'general' ? generalStyles : t3Styles;
+    const newTemplates = mode === 'general' ? generalTemplates : patternTemplates;
+    const newStyles = mode === 'general' ? generalStyles : patternStyles;
     setSelectedTemplateId(newTemplates[0].id);
     setSelectedStyleId(newStyles[0].id);
     setGeneratedPrompt(null);
@@ -182,7 +182,7 @@ function App() {
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              ティースリーモード
+              パターン指定モード
             </button>
           </div>
 

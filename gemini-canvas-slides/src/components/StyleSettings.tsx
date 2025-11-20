@@ -50,6 +50,9 @@ export default function StyleSettings({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStyle, setEditingStyle] = useState<Style | null>(null);
 
+  // プリセットスタイル詳細表示の状態管理
+  const [showStyleDetails, setShowStyleDetails] = useState(false);
+
   // プリセットカラーが選択されているかチェック
   const isPresetSelected = (preset: AccentColors) => {
     return !isCustomMode &&
@@ -82,6 +85,15 @@ export default function StyleSettings({
     setIsModalOpen(true);
   };
 
+  // プリセットスタイルをベースにカスタム作成
+  const handleCreateFromPreset = () => {
+    const selectedStyle = styles.find(s => s.id === selectedStyleId);
+    if (selectedStyle) {
+      setEditingStyle(selectedStyle);
+      setIsModalOpen(true);
+    }
+  };
+
   // カスタムスタイル編集ボタン
   const handleEditCustomStyle = (style: Style) => {
     setEditingStyle(style);
@@ -101,11 +113,11 @@ export default function StyleSettings({
 
   // カスタムスタイル保存
   const handleSaveCustomStyle = (styleData: Partial<Style>) => {
-    if (editingStyle) {
-      // 編集モード
+    if (editingStyle && editingStyle.isCustom) {
+      // 編集モード（カスタムスタイルの編集）
       onUpdateCustomStyle(editingStyle.id, styleData);
     } else {
-      // 新規作成モード
+      // 新規作成モード（プリセットからのコピーまたは完全新規）
       onCreateCustomStyle(styleData);
     }
     setIsModalOpen(false);
@@ -176,28 +188,76 @@ export default function StyleSettings({
             )}
           </select>
 
-          {/* カラープレビュー */}
-          {selectedStyleId && (
-            <div className="mt-3 p-3 bg-white rounded border border-gray-200">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="font-medium text-gray-700">カラー:</span>
-                <div className="flex gap-1">
-                  {styles.find(s => s.id === selectedStyleId)?.colors && (
-                    <>
-                      <div
-                        className="w-6 h-6 rounded border border-gray-300"
-                        style={{ backgroundColor: styles.find(s => s.id === selectedStyleId)!.colors.primary }}
-                        title="Primary"
-                      />
-                      <div
-                        className="w-6 h-6 rounded border border-gray-300"
-                        style={{ backgroundColor: styles.find(s => s.id === selectedStyleId)!.colors.secondary }}
-                        title="Secondary"
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
+          {/* プリセットスタイル詳細表示 */}
+          {selectedStyleId && !styles.find(s => s.id === selectedStyleId)?.isCustom && (
+            <div className="mt-3 bg-white rounded border border-gray-200">
+              <button
+                type="button"
+                onClick={() => setShowStyleDetails(!showStyleDetails)}
+                className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-sm font-medium text-gray-700">スタイル詳細を確認</span>
+                <span className="text-gray-500">{showStyleDetails ? '▼' : '▶'}</span>
+              </button>
+
+              {showStyleDetails && (() => {
+                const style = styles.find(s => s.id === selectedStyleId);
+                if (!style) return null;
+
+                return (
+                  <div className="px-3 pb-3 pt-1 space-y-3 border-t border-gray-200">
+                    {/* フォント情報 */}
+                    <div>
+                      <h5 className="text-xs font-semibold text-gray-700 mb-1">フォント</h5>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        <div><span className="font-medium">メイン:</span> {style.font.family}</div>
+                        <div><span className="font-medium">代替:</span> {style.font.fallback}</div>
+                      </div>
+                    </div>
+
+                    {/* カラー情報 */}
+                    <div>
+                      <h5 className="text-xs font-semibold text-gray-700 mb-1">カラー</h5>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {Object.entries(style.colors).map(([key, value]) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <div
+                              className="w-5 h-5 rounded border border-gray-300 flex-shrink-0"
+                              style={{ backgroundColor: value as string }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-700 capitalize">{key}</div>
+                              <div className="text-gray-500 font-mono text-[10px] truncate">{value}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* サイズ情報 */}
+                    <div>
+                      <h5 className="text-xs font-semibold text-gray-700 mb-1">フォントサイズ</h5>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        {Object.entries(style.sizes).map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span className="capitalize">{key}:</span>
+                            <span className="font-mono">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ベースにカスタム作成ボタン */}
+                    <button
+                      type="button"
+                      onClick={handleCreateFromPreset}
+                      className="w-full py-2 px-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
+                    >
+                      このスタイルをベースにカスタム作成
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -242,7 +302,7 @@ export default function StyleSettings({
         </div>
       )}
 
-      {/* アクセントカラー選択（ティースリーモードのみ表示） */}
+      {/* アクセントカラー選択（パターン指定モードのみ表示） */}
       {mode === 't3' && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">

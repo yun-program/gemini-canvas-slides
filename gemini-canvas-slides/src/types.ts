@@ -75,7 +75,7 @@ export interface StyleConfig {
 }
 
 // モード定義
-export type AppMode = 'general' | 't3'; // 汎用モード | ティースリーモード
+export type AppMode = 'general' | 't3'; // 汎用モード | パターン指定モード
 export type SubMode = 'set' | 'single'; // セット生成 | 単体生成（両モード共通）
 export type T3SubMode = SubMode; // 後方互換性のため
 
@@ -104,9 +104,9 @@ export interface UserInput {
   mode?: AppMode; // 使用するモード
   subMode?: SubMode; // サブモード（セット生成 | 単体生成）両モード共通
   t3SubMode?: T3SubMode; // 後方互換性のため（subModeと同じ）
-  selectedPattern?: string; // ティースリーモードの単体生成時に選択されたパターン
+  selectedPattern?: string; // パターン指定モードの単体生成時に選択されたパターン
   customAccentColors?: AccentColors; // カスタムアクセントカラー
-  customSlidePatterns?: SlidePattern[]; // ティースリーモードのセット生成時のカスタムスライドパターン
+  customSlidePatterns?: SlidePattern[]; // パターン指定モードのセット生成時のカスタムスライドパターン
 }
 
 // 構成（アウトライン）の型
