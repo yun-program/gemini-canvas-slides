@@ -46,6 +46,8 @@ export interface Style {
   font: FontConfig;
   colors: ColorConfig;
   sizes: SizeConfig;
+  isCustom?: boolean; // カスタムスタイルかどうか
+  createdAt?: string; // 作成日時（ISO 8601形式）
 }
 
 export interface LayoutRules {

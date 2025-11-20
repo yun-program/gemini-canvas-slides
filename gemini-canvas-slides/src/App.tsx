@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InputForm from './components/InputForm';
 import StyleSettings from './components/StyleSettings';
 import PromptDisplay from './components/PromptDisplay';
 import { buildPrompt } from './services/promptBuilder';
-import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, SubMode, AccentColors } from './types';
+import { loadCustomStyles, saveCustomStyles, createCustomStyle, updateCustomStyle, deleteCustomStyle, addCustomStyle } from './services/customStyleManager';
+import type { UserInput, GeneratedPrompt, TemplateConfig, StyleConfig, AppMode, SubMode, AccentColors, Style } from './types';
 
 // 設定ファイルのインポート
 import templatesData from '../config/templates.json';
@@ -22,6 +23,20 @@ function App() {
     sub: '#60A5FA',
   });
 
+  // カスタムスタイルの管理
+  const [customStylesList, setCustomStylesList] = useState<Style[]>([]);
+
+  // LocalStorageからカスタムスタイルを読み込む
+  useEffect(() => {
+    const loaded = loadCustomStyles();
+    setCustomStylesList(loaded);
+  }, []);
+
+  // カスタムスタイルをLocalStorageに保存
+  useEffect(() => {
+    saveCustomStyles(customStylesList);
+  }, [customStylesList]);
+
   // 汎用モード用のテンプレート
   const generalTemplates = (templatesData as TemplateConfig).templates;
   const generalStyles = (stylesData as StyleConfig).styles;
@@ -32,9 +47,11 @@ function App() {
   const t3Styles = (stylesCorporateData as StyleConfig).styles;
   const t3LayoutRules = (stylesCorporateData as StyleConfig).layoutRules;
 
-  // 現在のモードに応じたテンプレートとスタイルを取得
+  // 現在のモードに応じたテンプレートとスタイルを取得（カスタムスタイルをマージ）
   const currentTemplates = appMode === 'general' ? generalTemplates : t3Templates;
-  const currentStyles = appMode === 'general' ? generalStyles : t3Styles;
+  const currentStyles = appMode === 'general'
+    ? [...generalStyles, ...customStylesList] // 汎用モードのみカスタムスタイルを追加
+    : t3Styles;
   const currentLayoutRules = appMode === 'general' ? generalLayoutRules : t3LayoutRules;
 
   const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplates[0].id);
@@ -94,6 +111,35 @@ function App() {
         block: 'start',
       });
     }, 100);
+  };
+
+  // カスタムスタイル作成
+  const handleCreateCustomStyle = (styleData: Partial<Style>) => {
+    const newStyle = createCustomStyle({
+      name: styleData.name || '新しいスタイル',
+      description: styleData.description || '',
+      fontFamily: styleData.font?.family || 'Noto Sans JP',
+      fontFallback: styleData.font?.fallback || 'Yu Gothic, sans-serif',
+      primary: styleData.colors?.primary || '#1E40AF',
+      secondary: styleData.colors?.secondary || '#3B82F6',
+      text: styleData.colors?.text || '#1F2937',
+      textLight: styleData.colors?.textLight || '#6B7280',
+      background: styleData.colors?.background || '#FFFFFF',
+      accent: styleData.colors?.accent || '#DBEAFE',
+    });
+    setCustomStylesList(addCustomStyle(customStylesList, newStyle));
+    // 新しく作成したスタイルを選択
+    setSelectedStyleId(newStyle.id);
+  };
+
+  // カスタムスタイル更新
+  const handleUpdateCustomStyle = (styleId: string, updates: Partial<Style>) => {
+    setCustomStylesList(updateCustomStyle(customStylesList, styleId, updates));
+  };
+
+  // カスタムスタイル削除
+  const handleDeleteCustomStyle = (styleId: string) => {
+    setCustomStylesList(deleteCustomStyle(customStylesList, styleId));
   };
 
   return (
@@ -182,6 +228,9 @@ function App() {
               mode={appMode}
               customAccentColors={customAccentColors}
               onAccentColorsChange={setCustomAccentColors}
+              onCreateCustomStyle={handleCreateCustomStyle}
+              onUpdateCustomStyle={handleUpdateCustomStyle}
+              onDeleteCustomStyle={handleDeleteCustomStyle}
             />
           </div>
 

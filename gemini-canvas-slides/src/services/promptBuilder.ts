@@ -404,9 +404,9 @@ function buildT3SetGenerationPrompt(
   const { template, userInput } = input;
   const slideCount = userInput.slideCount || template.defaultSlideCount;
   const sizes = style.sizes as any;
-  const colors = style.colors as any;
+  const colors = { ...style.colors } as any;
 
-  // カスタムアクセントカラーが指定されている場合は上書き
+  // カスタムアクセントカラーが指定されている場合は上書き（ティースリーモード専用）
   if (userInput.customAccentColors) {
     colors.primary = userInput.customAccentColors.main;
     colors.secondary = userInput.customAccentColors.sub;
@@ -917,8 +917,8 @@ function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput
   const sizes = style.sizes as any;
   const colors = { ...style.colors } as any;
 
-  // カスタムアクセントカラーが指定されている場合は上書き
-  if (customAccentColors) {
+  // カスタムアクセントカラーが指定されている場合は上書き（ティースリーモードのみ）
+  if (mode === 't3' && customAccentColors) {
     colors.primary = customAccentColors.main;
     colors.secondary = customAccentColors.sub;
   }
