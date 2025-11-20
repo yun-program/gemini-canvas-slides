@@ -17,7 +17,7 @@
         "background": "#f9f9f9",
         "accent": "#DBEAFE",
         "pointRed": "#CC0000",
-        "sectionDividerGray": "#444746",
+        "sectionDividerGray": "#a5a5a5ff",
         "titleColor": "#000000"
       },
       "sizes": {
