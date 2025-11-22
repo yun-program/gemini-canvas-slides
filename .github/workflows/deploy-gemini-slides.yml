@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'gemini-canvas-slides/**'
-      - '.github/workflows/deploy-gemini-slides.yml'
   workflow_dispatch:
 
 # GitHub Pagesへのデプロイ権限を設定
@@ -23,9 +20,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: gemini-canvas-slides
 
     steps:
       - name: Checkout
@@ -36,7 +30,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: gemini-canvas-slides/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -47,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: gemini-canvas-slides/dist
+          path: dist
 
   deploy:
     environment:
