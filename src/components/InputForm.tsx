@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import FileUploader from './FileUploader';
 import type { UserInput, AppMode, SubMode, Template, SlidePattern } from '../types';
 import { recommendSlideCount } from '../services/promptBuilder';
@@ -31,9 +31,9 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
   } | null>(null);
 
   // パターン指定モードの単体生成時のパターン一覧（セット生成のカスタムパターンでも使用）
-  const patternPatterns = mode === 't3' && templates.length > 0
+  const patternPatterns = useMemo(() => mode === 't3' && templates.length > 0
     ? templates.find(t => t.id === 'corporate-training-full')?.structure || []
-    : [];
+    : [], [mode, templates]);
 
   // 詳細情報が変更されたら推奨スライド枚数を再計算
   useEffect(() => {
@@ -48,6 +48,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
         setSlideCountInput(rec.recommended.toString());
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [details, additionalNotes, theme]);
 
   const handleFilesProcessed = (content: string) => {
@@ -79,7 +80,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
   };
 
   // カスタムスライドパターンを初期化
-  const initializeCustomPatterns = (count: number) => {
+  const initializeCustomPatterns = useCallback((count: number) => {
     const patterns: SlidePattern[] = [];
     const availablePatterns = patternPatterns;
 
@@ -110,14 +111,14 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
       }
     }
     setCustomSlidePatterns(patterns);
-  };
+  }, [patternPatterns, customSlidePatterns]);
 
   // カスタムパターンが有効化されたときに初期化
   useEffect(() => {
     if (useCustomPatterns && slideCount && customSlidePatterns.length === 0) {
       initializeCustomPatterns(slideCount);
     }
-  }, [useCustomPatterns, slideCount]);
+  }, [useCustomPatterns, slideCount, initializeCustomPatterns, customSlidePatterns]);
 
   // 個別のスライドパターンを変更
   const handlePatternChange = (slideNumber: number, patternType: string) => {
@@ -375,7 +376,7 @@ export default function InputForm({ onSubmit, mode, subMode, templates, isGenera
                         onChange={(e) => handlePatternChange(pattern.slideNumber, e.target.value)}
                         className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       >
-                        {t3Patterns.map((p, index) => (
+                        {patternPatterns.map((p, index) => (
                           <option key={index} value={p.type}>
                             {p.title}
                           </option>

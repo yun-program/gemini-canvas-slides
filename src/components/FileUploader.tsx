@@ -28,7 +28,7 @@ export default function FileUploader({ onFilesProcessed }: FileUploaderProps) {
     e.stopPropagation();
   }, []);
 
-  const processFiles = async (files: File[]) => {
+  const processFiles = useCallback(async (files: File[]) => {
     setIsProcessing(true);
     setErrorMessage('');
 
@@ -75,12 +75,12 @@ export default function FileUploader({ onFilesProcessed }: FileUploaderProps) {
         const errorMsg = errorFiles.map(r => `${r.fileName}: ${r.error}`).join('\n');
         setErrorMessage(prev => prev ? `${prev}\n${errorMsg}` : errorMsg);
       }
-    } catch (error) {
+    } catch {
       setErrorMessage('ファイルの処理中にエラーが発生しました');
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [onFilesProcessed]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -89,12 +89,12 @@ export default function FileUploader({ onFilesProcessed }: FileUploaderProps) {
 
     const files = Array.from(e.dataTransfer.files);
     await processFiles(files);
-  }, []);
+  }, [processFiles]);
 
   const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     await processFiles(files);
-  }, []);
+  }, [processFiles]);
 
   const removeFile = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));

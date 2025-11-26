@@ -123,8 +123,8 @@ export function generateOutline(input: PromptInput): SlideOutline[] {
 
   // スライド枚数の決定（ユーザー指定 > 推奨 > デフォルト）
   const slideCount = userInput.slideCount ||
-                     recommendSlideCount(userInput).recommended ||
-                     template.defaultSlideCount;
+    recommendSlideCount(userInput).recommended ||
+    template.defaultSlideCount;
 
   // スライド枚数に応じて構成を調整
   if (slideCount === template.structure.length) {
@@ -202,7 +202,7 @@ export function buildPrompt(input: PromptInput): GeneratedPrompt {
 
   // 段階的生成モードの場合（汎用モードのセット生成時のみ）
   if (userInput.mode === 'general' && subMode === 'set' && userInput.useStepByStep) {
-    return buildStepByStepPrompts(input, outline, style, layoutRules, recommendation);
+    return buildStepByStepPrompts(input, outline, layoutRules, recommendation);
   }
 
   // 通常モード（一括生成）
@@ -303,14 +303,14 @@ ${slideList}
 以下のパターンを使用します：
 
 ${customPatterns.map(cp => {
-  const pattern = patternMap[cp.patternType];
-  const contentGuidance = cp.contentGuidance
-    ? `\n\n**【このスライドに含める内容】**\n${cp.contentGuidance}\n\n上記の内容を元資料から抽出・展開して、このパターンに沿ったスライドを作成してください。`
-    : '';
-  return `### スライド${cp.slideNumber}: ${pattern.number}. **${pattern.title}**
+    const pattern = patternMap[cp.patternType];
+    const contentGuidance = cp.contentGuidance
+      ? `\n\n**【このスライドに含める内容】**\n${cp.contentGuidance}\n\n上記の内容を元資料から抽出・展開して、このパターンに沿ったスライドを作成してください。`
+      : '';
+    return `### スライド${cp.slideNumber}: ${pattern.number}. **${pattern.title}**
 
 ${pattern.guidance}${contentGuidance}`;
-}).join('\n\n')}
+  }).join('\n\n')}
 
 ---`;
 }
@@ -407,8 +407,8 @@ function buildT3SetGenerationPrompt(
 ): GeneratedPrompt {
   const { template, userInput } = input;
   const slideCount = userInput.slideCount || template.defaultSlideCount;
-  const sizes = style.sizes as any;
-  const colors = { ...style.colors } as any;
+  const sizes = style.sizes;
+  const colors = { ...style.colors };
 
   // カスタムアクセントカラーが指定されている場合は上書き（パターン指定モード専用）
   if (userInput.customAccentColors) {
@@ -734,7 +734,7 @@ function buildSingleSlidePrompt(
 function buildStepByStepPrompts(
   input: PromptInput,
   outline: SlideOutline[],
-  style: PromptInput['style'],
+
   layoutRules: PromptInput['layoutRules'],
   recommendation: SlideCountRecommendation
 ): GeneratedPrompt {
@@ -873,21 +873,7 @@ function buildStepByStepPrompts(
 /**
  * 役割定義セクション
  */
-function buildRoleSection(slideCount: number, mode?: string): string {
-  return `Canvas機能をつかってスライドを作成してください。
 
-あなたはプレゼンテーションスライド作成の専門家です。
-
-以下に示すテーマと詳細情報をもとに、${slideCount}枚のプレゼンテーションスライドの内容を考えて、実際のスライドをCanvas機能で今すぐ作成してください。
-
-**【最重要】プロンプト文を出力するのではなく、実際のスライドそのものを${slideCount}枚作成してください。**
-
-【絶対に守ること】
-❌ コードやドキュメントを書かないでください
-❌ スライドの作り方や仕様を説明しないでください
-❌ 「以下のようなスライドを作成します」などの前置きは不要です
-✅ 実際のスライドの内容そのものを、今すぐ出力してください`;
-}
 
 /**
  * テーマ・内容セクション
@@ -914,8 +900,8 @@ function buildThemeSection(userInput: { theme: string; details: string; targetAu
  * スタイル規定セクション
  */
 function buildStyleSection(style: PromptInput['style'], layoutRules: PromptInput['layoutRules'], mode?: string, customAccentColors?: { main: string; sub: string }): string {
-  const sizes = style.sizes as any;
-  const colors = { ...style.colors } as any;
+  const sizes = style.sizes;
+  const colors = { ...style.colors };
 
   // カスタムアクセントカラーが指定されている場合は上書き（パターン指定モードのみ）
   if (mode === 't3' && customAccentColors) {

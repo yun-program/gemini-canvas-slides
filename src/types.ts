@@ -30,6 +30,10 @@ export interface ColorConfig {
   textLight: string;
   background: string;
   accent: string;
+  // 追加のカラープロパティ（オプション）
+  sectionDividerGray?: string;
+  titleColor?: string;
+  pointRed?: string;
 }
 
 export interface SizeConfig {
@@ -37,6 +41,10 @@ export interface SizeConfig {
   slideTitle: string;
   body: string;
   caption: string;
+  // 追加のサイズプロパティ（オプション）
+  heading?: string;
+  bodySmall?: string;
+  citation?: string;
 }
 
 export interface Style {
